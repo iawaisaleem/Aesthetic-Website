@@ -41,8 +41,20 @@
   .container{max-width:1140px;margin:0 auto;padding:0 28px;}
 
   /* ---------- top bar ---------- */
-  .topbar{background:var(--ink);color:#EDE6DC;font-size:13px;}
-  .topbar .container{display:flex;justify-content:space-between;align-items:center;height:38px;letter-spacing:.02em;}
+  .topbar{
+    background:var(--ink);
+    color:#EDE6DC;
+    font-size:13px;
+    padding: 8px 0; /* Dynamic padding instead of a fixed height to prevent clipping */
+  }
+  .topbar .container{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap: wrap; /* Allows links to wrap to the next line on tiny devices */
+    gap: 10px;
+    letter-spacing:.02em;
+  }
   .topbar a{opacity:.9;}
   .topbar a:hover{opacity:1;color:var(--gold);}
   .topbar .tb-links{display:flex;gap:22px;}
@@ -162,7 +174,7 @@
   .book-side .info-row b{color:#fff;display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px;}
   .book-form{padding:48px 40px;}
   .field{margin-bottom:20px;}
-  .field label{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px;}
+  .field label覆{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px;}
   .field input, .field select, .field textarea{
     width:100%;border:1px solid var(--line);background:var(--cream);padding:12px 14px;font-size:14.5px;
     font-family:inherit;border-radius:1px;color:var(--ink);
@@ -259,7 +271,7 @@
     .stat-row{grid-template-columns:1fr 1fr;}
   }
   @media(max-width:760px){
-    nav.links{position:fixed;top:78px;left:0;right:0;background:var(--cream);flex-direction:column;align-items:flex-start;
+    nav.links{position:fixed;top:100%;left:0;right:0;background:var(--cream);flex-direction:column;align-items:flex-start;
       padding:20px 28px 28px;border-bottom:1px solid var(--line);gap:18px;transform:translateY(-130%);transition:.25s;}
     nav.links.open{transform:translateY(0);}
     .menu-toggle{display:block;}
@@ -648,59 +660,27 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'), 2600);
 }
 
-/* ---------------- storage helpers (Fallback to standard localStorage) ---------------- */
+/* ---------------- storage helpers (shared = visible to admin & patients) ---------------- */
 async function getAppointments(){
   try{
-    if (window.storage && typeof window.storage.get === 'function') {
-      const res = await window.storage.get('appointments', true);
-      if (res && res.value) return JSON.parse(res.value);
-    }
-    const localRes = localStorage.getItem('rahfan_appointments');
-    return localRes ? JSON.parse(localRes) : [];
+    const res = await window.storage.get('appointments', true);
+    return res ? JSON.parse(res.value) : [];
   }catch(e){ return []; }
 }
-
 async function saveAppointments(list){
-  try{ 
-    localStorage.setItem('rahfan_appointments', JSON.stringify(list));
-    if (window.storage && typeof window.storage.set === 'function') {
-      await window.storage.set('appointments', JSON.stringify(list), true); 
-    }
-  }catch(e){}
+  try{ await window.storage.set('appointments', JSON.stringify(list), true); }catch(e){}
 }
-
 async function getAvailability(){
   try{
-    if (window.storage && typeof window.storage.get === 'function') {
-      const res = await window.storage.get('availability', true);
-      if (res && res.value) return JSON.parse(res.value);
-    }
-    const localAvail = localStorage.getItem('rahfan_availability');
-    return localAvail ? JSON.parse(localAvail) : defaultAvailability();
+    const res = await window.storage.get('availability', true);
+    return res ? JSON.parse(res.value) : defaultAvailability();
   }catch(e){ return defaultAvailability(); }
 }
-
 function defaultAvailability(){
   return {Mon:"Open",Tue:"Open",Wed:"Open",Thu:"Open",Fri:"Open",Sat:"Open",Sun:"Closed"};
 }
 
-/* ---------------- Sunday & Closed Days Dynamic Verification ---------------- */
-document.getElementById('bk-date').addEventListener('change', async function() {
-  const chosenDate = new Date(this.value);
-  if (isNaN(chosenDate.getTime())) return;
-
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const dayName = daysOfWeek[chosenDate.getDay()];
-  
-  const currentAvailability = await getAvailability();
-  
-  if (currentAvailability[dayName] === 'Closed' || dayName === 'Sun') {
-    alert(`The clinic is closed on ${dayName === 'Sun' ? 'Sundays' : daysOfWeek[chosenDate.getDay() + 's']}. Please select a different working date.`);
-    this.value = '';
-  }
-});
-
-/* ---------------- booking form & email notification automation ---------------- */
+/* ---------------- booking form ---------------- */
 document.getElementById('bookingForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const msg = document.getElementById('bookMsg');
@@ -716,39 +696,22 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
     status: 'pending',
     created: new Date().toISOString()
   };
-  
   if(!appt.name || !appt.phone || !appt.service || !appt.date || !appt.time){
     msg.className='form-msg err'; msg.textContent='Please fill in all required fields.'; return;
   }
-  
   try{
     const list = await getAppointments();
     list.unshift(appt);
     await saveAppointments(list);
-    
     msg.className='form-msg ok';
-    msg.textContent = "Thank you, " + appt.name + "! Your request for " + appt.date + " at " + appt.time + " has been received. We'll confirm shortly by phone or email.";
-    
-    // --- ADMIN EMAIL NOTIFICATION TRIGGERS HERE ---
-    // Connect your client side form data to a secure backend endpoint or a platform like Formspree or EmailJS.
-    fetch('https://formspree.io/f/YOUR_ENDPOINT_HERE', { 
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        _to: "awaisalee000@gmail.com",
-        subject: "🚨 New Appointment Alert: " + appt.name,
-        message: `New Booking Request Details:\n\nPatient Name: ${appt.name}\nPhone: ${appt.phone}\nEmail: ${appt.email || 'N/A'}\nRequested Service: ${appt.service}\nDate & Time: ${appt.date} at ${appt.time}\nNotes: ${appt.notes || 'None'}`
-      })
-    }).catch(err => console.log("Email dispatch service offline. Appointment logged internally."));
-
+    msg.textContent="Thank you, "+appt.name+"! Your request for "+appt.date+" at "+appt.time+" has been received. We'll confirm shortly by phone or email.";
     document.getElementById('bookingForm').reset();
     showToast('Appointment request sent ✓');
   }catch(err){
     msg.className='form-msg err'; msg.textContent='Something went wrong saving your request. Please call 0320 2557305 directly.';
   }
 });
-
-// Minimum validation constraint
+// minimum date = today
 document.getElementById('bk-date').min = new Date().toISOString().split('T')[0];
 
 /* ---------------- admin auth ---------------- */
@@ -771,7 +734,7 @@ function adminLogout(){
   document.getElementById('adminPanel').style.display='none';
   document.getElementById('adminLogin').style.display='block';
 }
-let inMemoryAdminFlag=false; 
+let inMemoryAdminFlag=false; // fallback since sessionStorage may be restricted in artifact sandbox
 function sessionStorageSafeSet(k,v){
   inMemoryAdminFlag = (v==='1');
 }
@@ -870,10 +833,7 @@ async function saveAvailability(){
   const avail={};
   days.forEach(d=>{ avail[d]=document.getElementById('av-'+d).value; });
   try{
-    localStorage.setItem('rahfan_availability', JSON.stringify(avail));
-    if (window.storage && typeof window.storage.set === 'function') {
-      await window.storage.set('availability', JSON.stringify(avail), true);
-    }
+    await window.storage.set('availability', JSON.stringify(avail), true);
     showToast('Availability saved ✓');
   }catch(e){ showToast('Could not save availability'); }
 }
