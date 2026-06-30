@@ -276,7 +276,6 @@
 </head>
 <body>
 
-<!-- ============ TOP BAR ============ -->
 <div class="topbar">
   <div class="container">
     <div class="tb-links">
@@ -287,7 +286,6 @@
   </div>
 </div>
 
-<!-- ============ NAV ============ -->
 <header class="nav">
   <div class="container">
     <div class="brand">
@@ -312,7 +310,6 @@
   </div>
 </header>
 
-<!-- ============ HOME ============ -->
 <div class="page active" id="page-home">
   <section class="hero">
     <div class="container hero-grid">
@@ -399,7 +396,6 @@
   </section>
 </div>
 
-<!-- ============ ABOUT ============ -->
 <div class="page" id="page-about">
   <section>
     <div class="container about-grid">
@@ -437,7 +433,6 @@
   </section>
 </div>
 
-<!-- ============ SERVICES ============ -->
 <div class="page" id="page-services">
   <section style="padding-bottom:0;">
     <div class="container section-head" style="margin-bottom:20px;">
@@ -463,7 +458,6 @@
   </section>
 </div>
 
-<!-- ============ BOOK ============ -->
 <div class="page" id="page-book">
   <section>
     <div class="container">
@@ -524,7 +518,6 @@
   </section>
 </div>
 
-<!-- ============ ADMIN ============ -->
 <div class="page" id="page-admin">
 
   <div id="adminLogin">
@@ -589,7 +582,6 @@
   </div>
 </div>
 
-<!-- ============ FOOTER ============ -->
 <footer>
   <div class="container">
     <div class="foot-grid">
@@ -656,27 +648,59 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'), 2600);
 }
 
-/* ---------------- storage helpers (shared = visible to admin & patients) ---------------- */
+/* ---------------- storage helpers (Fallback to standard localStorage) ---------------- */
 async function getAppointments(){
   try{
-    const res = await window.storage.get('appointments', true);
-    return res ? JSON.parse(res.value) : [];
+    if (window.storage && typeof window.storage.get === 'function') {
+      const res = await window.storage.get('appointments', true);
+      if (res && res.value) return JSON.parse(res.value);
+    }
+    const localRes = localStorage.getItem('rahfan_appointments');
+    return localRes ? JSON.parse(localRes) : [];
   }catch(e){ return []; }
 }
+
 async function saveAppointments(list){
-  try{ await window.storage.set('appointments', JSON.stringify(list), true); }catch(e){}
+  try{ 
+    localStorage.setItem('rahfan_appointments', JSON.stringify(list));
+    if (window.storage && typeof window.storage.set === 'function') {
+      await window.storage.set('appointments', JSON.stringify(list), true); 
+    }
+  }catch(e){}
 }
+
 async function getAvailability(){
   try{
-    const res = await window.storage.get('availability', true);
-    return res ? JSON.parse(res.value) : defaultAvailability();
+    if (window.storage && typeof window.storage.get === 'function') {
+      const res = await window.storage.get('availability', true);
+      if (res && res.value) return JSON.parse(res.value);
+    }
+    const localAvail = localStorage.getItem('rahfan_availability');
+    return localAvail ? JSON.parse(localAvail) : defaultAvailability();
   }catch(e){ return defaultAvailability(); }
 }
+
 function defaultAvailability(){
   return {Mon:"Open",Tue:"Open",Wed:"Open",Thu:"Open",Fri:"Open",Sat:"Open",Sun:"Closed"};
 }
 
-/* ---------------- booking form ---------------- */
+/* ---------------- Sunday & Closed Days Dynamic Verification ---------------- */
+document.getElementById('bk-date').addEventListener('change', async function() {
+  const chosenDate = new Date(this.value);
+  if (isNaN(chosenDate.getTime())) return;
+
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayName = daysOfWeek[chosenDate.getDay()];
+  
+  const currentAvailability = await getAvailability();
+  
+  if (currentAvailability[dayName] === 'Closed' || dayName === 'Sun') {
+    alert(`The clinic is closed on ${dayName === 'Sun' ? 'Sundays' : daysOfWeek[chosenDate.getDay() + 's']}. Please select a different working date.`);
+    this.value = '';
+  }
+});
+
+/* ---------------- booking form & email notification automation ---------------- */
 document.getElementById('bookingForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const msg = document.getElementById('bookMsg');
@@ -692,22 +716,39 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
     status: 'pending',
     created: new Date().toISOString()
   };
+  
   if(!appt.name || !appt.phone || !appt.service || !appt.date || !appt.time){
     msg.className='form-msg err'; msg.textContent='Please fill in all required fields.'; return;
   }
+  
   try{
     const list = await getAppointments();
     list.unshift(appt);
     await saveAppointments(list);
+    
     msg.className='form-msg ok';
-    msg.textContent="Thank you, "+appt.name+"! Your request for "+appt.date+" at "+appt.time+" has been received. We'll confirm shortly by phone or email.";
+    msg.textContent = "Thank you, " + appt.name + "! Your request for " + appt.date + " at " + appt.time + " has been received. We'll confirm shortly by phone or email.";
+    
+    // --- ADMIN EMAIL NOTIFICATION TRIGGERS HERE ---
+    // Connect your client side form data to a secure backend endpoint or a platform like Formspree or EmailJS.
+    fetch('https://formspree.io/f/YOUR_ENDPOINT_HERE', { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        _to: "awaisalee000@gmail.com",
+        subject: "🚨 New Appointment Alert: " + appt.name,
+        message: `New Booking Request Details:\n\nPatient Name: ${appt.name}\nPhone: ${appt.phone}\nEmail: ${appt.email || 'N/A'}\nRequested Service: ${appt.service}\nDate & Time: ${appt.date} at ${appt.time}\nNotes: ${appt.notes || 'None'}`
+      })
+    }).catch(err => console.log("Email dispatch service offline. Appointment logged internally."));
+
     document.getElementById('bookingForm').reset();
     showToast('Appointment request sent ✓');
   }catch(err){
     msg.className='form-msg err'; msg.textContent='Something went wrong saving your request. Please call 0320 2557305 directly.';
   }
 });
-// minimum date = today
+
+// Minimum validation constraint
 document.getElementById('bk-date').min = new Date().toISOString().split('T')[0];
 
 /* ---------------- admin auth ---------------- */
@@ -730,7 +771,7 @@ function adminLogout(){
   document.getElementById('adminPanel').style.display='none';
   document.getElementById('adminLogin').style.display='block';
 }
-let inMemoryAdminFlag=false; // fallback since sessionStorage may be restricted in artifact sandbox
+let inMemoryAdminFlag=false; 
 function sessionStorageSafeSet(k,v){
   inMemoryAdminFlag = (v==='1');
 }
@@ -829,7 +870,10 @@ async function saveAvailability(){
   const avail={};
   days.forEach(d=>{ avail[d]=document.getElementById('av-'+d).value; });
   try{
-    await window.storage.set('availability', JSON.stringify(avail), true);
+    localStorage.setItem('rahfan_availability', JSON.stringify(avail));
+    if (window.storage && typeof window.storage.set === 'function') {
+      await window.storage.set('availability', JSON.stringify(avail), true);
+    }
     showToast('Availability saved ✓');
   }catch(e){ showToast('Could not save availability'); }
 }
