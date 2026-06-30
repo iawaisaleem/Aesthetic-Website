@@ -19,10 +19,22 @@
     --gold:#C9A45C;
     --radius:2px;
   }
-  *{box-sizing:border-box;}
+  
+  /* Universal reset to eliminate any hidden margins causing the top white bar */
+  *{
+    box-sizing:border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
   html{scroll-behavior:smooth;}
   body{
-    margin:0;
     background:var(--cream);
     color:var(--ink);
     font-family:'Work Sans',sans-serif;
@@ -45,13 +57,16 @@
     background:var(--ink);
     color:#EDE6DC;
     font-size:13px;
-    padding: 8px 0; /* Dynamic padding instead of a fixed height to prevent clipping */
+    padding: 8px 0;
+    margin-top: 0;
+    width: 100%;
+    display: block;
   }
   .topbar .container{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    flex-wrap: wrap; /* Allows links to wrap to the next line on tiny devices */
+    flex-wrap: wrap;
     gap: 10px;
     letter-spacing:.02em;
   }
@@ -174,7 +189,7 @@
   .book-side .info-row b{color:#fff;display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px;}
   .book-form{padding:48px 40px;}
   .field{margin-bottom:20px;}
-  .field label覆{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px;}
+  .field label{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px;}
   .field input, .field select, .field textarea{
     width:100%;border:1px solid var(--line);background:var(--cream);padding:12px 14px;font-size:14.5px;
     font-family:inherit;border-radius:1px;color:var(--ink);
@@ -288,6 +303,7 @@
 </head>
 <body>
 
+<!-- ============ TOP BAR ============ -->
 <div class="topbar">
   <div class="container">
     <div class="tb-links">
@@ -298,6 +314,7 @@
   </div>
 </div>
 
+<!-- ============ NAV ============ -->
 <header class="nav">
   <div class="container">
     <div class="brand">
@@ -322,6 +339,7 @@
   </div>
 </header>
 
+<!-- ============ HOME ============ -->
 <div class="page active" id="page-home">
   <section class="hero">
     <div class="container hero-grid">
@@ -408,6 +426,7 @@
   </section>
 </div>
 
+<!-- ============ ABOUT ============ -->
 <div class="page" id="page-about">
   <section>
     <div class="container about-grid">
@@ -445,6 +464,7 @@
   </section>
 </div>
 
+<!-- ============ SERVICES ============ -->
 <div class="page" id="page-services">
   <section style="padding-bottom:0;">
     <div class="container section-head" style="margin-bottom:20px;">
@@ -470,6 +490,7 @@
   </section>
 </div>
 
+<!-- ============ BOOK ============ -->
 <div class="page" id="page-book">
   <section>
     <div class="container">
@@ -530,6 +551,7 @@
   </section>
 </div>
 
+<!-- ============ ADMIN ============ -->
 <div class="page" id="page-admin">
 
   <div id="adminLogin">
@@ -594,6 +616,7 @@
   </div>
 </div>
 
+<!-- ============ FOOTER ============ -->
 <footer>
   <div class="container">
     <div class="foot-grid">
@@ -660,7 +683,7 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'), 2600);
 }
 
-/* ---------------- storage helpers (shared = visible to admin & patients) ---------------- */
+/* ---------------- storage helpers ---------------- */
 async function getAppointments(){
   try{
     const res = await window.storage.get('appointments', true);
@@ -711,7 +734,6 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
     msg.className='form-msg err'; msg.textContent='Something went wrong saving your request. Please call 0320 2557305 directly.';
   }
 });
-// minimum date = today
 document.getElementById('bk-date').min = new Date().toISOString().split('T')[0];
 
 /* ---------------- admin auth ---------------- */
@@ -734,7 +756,7 @@ function adminLogout(){
   document.getElementById('adminPanel').style.display='none';
   document.getElementById('adminLogin').style.display='block';
 }
-let inMemoryAdminFlag=false; // fallback since sessionStorage may be restricted in artifact sandbox
+let inMemoryAdminFlag=false;
 function sessionStorageSafeSet(k,v){
   inMemoryAdminFlag = (v==='1');
 }
@@ -838,8 +860,7 @@ async function saveAvailability(){
   }catch(e){ showToast('Could not save availability'); }
 }
 
-/* init */
-renderAdminIfLoggedIn();
+init: renderAdminIfLoggedIn();
 </script>
 </body>
 </html>
