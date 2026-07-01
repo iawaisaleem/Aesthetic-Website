@@ -6,6 +6,13 @@
 <title>Rahfan Aesthetic — Skin & Aesthetic Clinic, Lahore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+  (function() {
+    // REQUIRED: Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key
+    emailjs.init("YOUR_PUBLIC_KEY");
+  })();
+</script>
 <style>
   :root{
     --cream:#FAF5EF;
@@ -20,7 +27,6 @@
     --radius:2px;
   }
   
-  /* Universal reset to eliminate any hidden margins causing the top white bar */
   *{
     box-sizing:border-box;
     margin: 0;
@@ -266,7 +272,6 @@
     box-shadow:0 12px 30px -10px rgba(0,0,0,.4);z-index:200;opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none;}
   .toast.show{opacity:1;transform:translateY(0);}
 
-  /* ---------- responsive ---------- */
   @media(max-width:980px){
     .hero-grid{grid-template-columns:1fr;padding:50px 0;}
     .hero h1{font-size:40px;}
@@ -303,7 +308,6 @@
 </head>
 <body>
 
-<!-- ============ TOP BAR ============ -->
 <div class="topbar">
   <div class="container">
     <div class="tb-links">
@@ -314,7 +318,6 @@
   </div>
 </div>
 
-<!-- ============ NAV ============ -->
 <header class="nav">
   <div class="container">
     <div class="brand">
@@ -339,7 +342,6 @@
   </div>
 </header>
 
-<!-- ============ HOME ============ -->
 <div class="page active" id="page-home">
   <section class="hero">
     <div class="container hero-grid">
@@ -426,7 +428,6 @@
   </section>
 </div>
 
-<!-- ============ ABOUT ============ -->
 <div class="page" id="page-about">
   <section>
     <div class="container about-grid">
@@ -464,7 +465,6 @@
   </section>
 </div>
 
-<!-- ============ SERVICES ============ -->
 <div class="page" id="page-services">
   <section style="padding-bottom:0;">
     <div class="container section-head" style="margin-bottom:20px;">
@@ -490,7 +490,6 @@
   </section>
 </div>
 
-<!-- ============ BOOK ============ -->
 <div class="page" id="page-book">
   <section>
     <div class="container">
@@ -551,7 +550,6 @@
   </section>
 </div>
 
-<!-- ============ ADMIN ============ -->
 <div class="page" id="page-admin">
 
   <div id="adminLogin">
@@ -616,7 +614,6 @@
   </div>
 </div>
 
-<!-- ============ FOOTER ============ -->
 <footer>
   <div class="container">
     <div class="foot-grid">
@@ -707,27 +704,66 @@ function defaultAvailability(){
 document.getElementById('bookingForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const msg = document.getElementById('bookMsg');
+  
+  const chosenDateVal = document.getElementById('bk-date').value;
+  const chosenTimeVal = document.getElementById('bk-time').value;
+  
+  // Requirement 1: Verify Clinic Weekly Off Days
+  const dateObj = new Date(chosenDateVal);
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const chosenDayName = daysOfWeek[dateObj.getDay()];
+  
+  const availability = await getAvailability();
+  if (availability[chosenDayName] === 'Closed') {
+    msg.className = 'form-msg err';
+    msg.textContent = `The clinic is closed on ${chosenDayName}days. Please choose another date.`;
+    return;
+  }
+
+  // Requirement 3: Check Time Slot Double Booking Conflict
+  const list = await getAppointments();
+  const isTimeSlotTaken = list.some(appt => appt.date === chosenDateVal && appt.time === chosenTimeVal && appt.status === 'confirmed');
+  if (isTimeSlotTaken) {
+    msg.className = 'form-msg err';
+    msg.textContent = `This time slot (${chosenTimeVal} on ${chosenDateVal}) has already been booked. Please pick a different time.`;
+    return;
+  }
+
   const appt = {
     id: 'apt_'+Date.now(),
     name: document.getElementById('bk-name').value.trim(),
     phone: document.getElementById('bk-phone').value.trim(),
     email: document.getElementById('bk-email').value.trim(),
     service: document.getElementById('bk-service').value,
-    date: document.getElementById('bk-date').value,
-    time: document.getElementById('bk-time').value,
+    date: chosenDateVal,
+    time: chosenTimeVal,
     notes: document.getElementById('bk-notes').value.trim(),
     status: 'pending',
     created: new Date().toISOString()
   };
+
   if(!appt.name || !appt.phone || !appt.service || !appt.date || !appt.time){
     msg.className='form-msg err'; msg.textContent='Please fill in all required fields.'; return;
   }
+
   try{
-    const list = await getAppointments();
     list.unshift(appt);
     await saveAppointments(list);
     msg.className='form-msg ok';
-    msg.textContent="Thank you, "+appt.name+"! Your request for "+appt.date+" at "+appt.time+" has been received. We'll confirm shortly by phone or email.";
+    msg.textContent="Thank you, "+appt.name+"! Your request for "+appt.date+" at "+appt.time+" has been received. We'll confirm shortly.";
+    
+    // Requirement 2: Email alert to Admin on dynamic booking submission
+    sendEmailNotification("admin_notification_template", {
+      admin_email: "awaisalee000@gmail.com",
+      patient_name: appt.name,
+      patient_phone: appt.phone,
+      patient_email: appt.email || "N/A",
+      chosen_service: appt.service,
+      chosen_date: appt.date,
+      chosen_time: appt.time,
+      notes: appt.notes || "None"
+    });
+
     document.getElementById('bookingForm').reset();
     showToast('Appointment request sent ✓');
   }catch(err){
@@ -822,11 +858,40 @@ async function refreshAdmin(){
 function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
 async function setStatus(id, status){
   const list = await getAppointments();
   const idx = list.findIndex(a=>a.id===id);
-  if(idx>-1){ list[idx].status=status; await saveAppointments(list); refreshAdmin(); showToast('Appointment '+status); }
+  if(idx>-1){ 
+    const targetAppt = list[idx];
+
+    // Requirement 3: Prevent confirmation if that specific slot is already occupied
+    if(status === 'confirmed') {
+      const alreadyConfirmed = list.some(a => a.date === targetAppt.date && a.time === targetAppt.time && a.status === 'confirmed' && a.id !== id);
+      if(alreadyConfirmed) {
+        alert(`Cannot confirm. Another appointment is already confirmed at ${targetAppt.time} on ${targetAppt.date}.`);
+        return;
+      }
+    }
+
+    targetAppt.status=status; 
+    await saveAppointments(list); 
+    refreshAdmin(); 
+    showToast('Appointment '+status); 
+
+    // Requirement 2: Send confirmation email routing directly to patient
+    if (status === 'confirmed' && targetAppt.email) {
+      sendEmailNotification("patient_confirmation_template", {
+        patient_email: targetAppt.email,
+        patient_name: targetAppt.name,
+        chosen_service: targetAppt.service,
+        chosen_date: targetAppt.date,
+        chosen_time: targetAppt.time
+      });
+    }
+  }
 }
+
 async function deleteAppt(id){
   if(!confirm('Delete this appointment request?')) return;
   let list = await getAppointments();
@@ -858,6 +923,17 @@ async function saveAvailability(){
     await window.storage.set('availability', JSON.stringify(avail), true);
     showToast('Availability saved ✓');
   }catch(e){ showToast('Could not save availability'); }
+}
+
+/* Helper implementation to issue direct asynchronous calls out to EmailJS */
+function sendEmailNotification(templateId, templateParams) {
+  // Replace 'YOUR_SERVICE_ID' with your real service ID from EmailJS dashboards
+  emailjs.send("YOUR_SERVICE_ID", templateId, templateParams)
+    .then(() => {
+       console.log("Email tracking notification sent cleanly.");
+    }, (err) => {
+       console.error("Failed sending message out via EmailJS...", err);
+    });
 }
 
 init: renderAdminIfLoggedIn();
