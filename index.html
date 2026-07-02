@@ -167,7 +167,7 @@
 
   /* ---------- why / features ---------- */
   .feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:30px;}
-  .feat{text-align:center;}
+  .feat(text-align:center;}
   .feat .ic{width:54px;height:54px;border:1px solid var(--clay);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;color:var(--clay-deep);font-size:20px;}
   .feat h3{font-size:16px;margin-bottom:8px;}
   .feat p{font-size:13.5px;color:var(--ink-soft);line-height:1.6;}
@@ -229,7 +229,8 @@
   .stat-card{background:var(--paper);border:1px solid var(--line);padding:22px 24px;}
   .stat-card b{display:block;font-family:'Fraunces',serif;font-size:28px;color:var(--clay-deep);}
   .stat-card span{font-size:12.5px;color:var(--ink-soft);letter-spacing:.02em;}
-  .panel{background:var(--paper);border:1px solid var(--line);padding:0;}
+  .panel{background:var(--paper);border:1px solid var(--line);padding:0;margin-bottom:30px;}
+  .panel-title{padding:16px 20px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line);background:#FBF7F2;color:var(--ink);}
   table{width:100%;border-collapse:collapse;}
   thead th{
     text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);
@@ -564,6 +565,7 @@
         <div class="a-title">Rahfan Admin</div>
         <button class="a-link active" data-tab="dash" onclick="adminTab('dash')">📊 Dashboard</button>
         <button class="a-link" data-tab="appts" onclick="adminTab('appts')">📅 Appointments</button>
+        <button class="a-link" data-tab="history" onclick="adminTab('history')">📜 Patient History</button>
         <button class="a-link" data-tab="avail" onclick="adminTab('avail')">🕐 Availability</button>
         <button class="a-link" onclick="adminLogout()">⎋ Log Out</button>
       </aside>
@@ -577,20 +579,41 @@
             <div class="stat-card"><b id="st-confirmed">0</b><span>Confirmed</span></div>
             <div class="stat-card"><b id="st-today">0</b><span>Today's Bookings</span></div>
           </div>
+          
           <div class="panel">
+            <div class="panel-title">📅 Today's Bookings (Present Day Schedule)</div>
             <table>
-              <thead><tr><th>Patient</th><th>Service</th><th>Date</th><th>Status</th></tr></thead>
+              <thead><tr><th>Patient</th><th>Service</th><th>Time Slot</th><th>Status</th></tr></thead>
+              <tbody id="todayBookingsBody"></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">✨ Recent Requests Breakdown</div>
+            <table>
+              <thead><tr><th>Patient</th><th>Service</th><th>Date &amp; Time</th><th>Status</th></tr></thead>
               <tbody id="recentBody"></tbody>
             </table>
           </div>
         </div>
 
         <div id="tab-appts" style="display:none;">
-          <div class="admin-head"><h2>Appointments</h2><button class="ghost-btn" onclick="refreshAdmin()">↻ Refresh</button></div>
+          <div class="admin-head"><h2>All Active Requests</h2><button class="ghost-btn" onclick="refreshAdmin()">↻ Refresh</button></div>
           <div class="panel">
             <table>
               <thead><tr><th>Patient</th><th>Contact</th><th>Service</th><th>Date &amp; Time</th><th>Status</th><th>Action</th></tr></thead>
               <tbody id="apptBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-history" style="display:none;">
+          <div class="admin-head"><h2>Confirmed Patient History</h2></div>
+          <div class="panel">
+            <div class="panel-title">Archived Log of Confirmed Appointments</div>
+            <table>
+              <thead><tr><th>Patient</th><th>Contact Info</th><th>Treatment Type</th><th>Scheduled Timeline</th><th>Status</th></tr></thead>
+              <tbody id="historyBody"></tbody>
             </table>
           </div>
         </div>
@@ -684,24 +707,24 @@ function showToast(msg){
   setTimeout(() => t.classList.remove('show'), 2600);
 }
 
-/* ---------------- browser safe storage helpers ---------------- */
+/* ---------------- storage helpers ---------------- */
 async function getAppointments(){
   try{
-    const res = localStorage.getItem('appointments');
-    return res ? JSON.parse(res) : [];
+    const res = await window.storage.get('appointments', true);
+    return res ? JSON.parse(res.value) : [];
   }catch(e){ return []; }
 }
 
 async function saveAppointments(list){
   try{ 
-    localStorage.setItem('appointments', JSON.stringify(list)); 
+    await window.storage.set('appointments', JSON.stringify(list), true); 
   }catch(e){}
 }
 
 async function getAvailability(){
   try{
-    const res = localStorage.getItem('availability');
-    return res ? JSON.parse(res) : defaultAvailability();
+    const res = await window.storage.get('availability', true);
+    return res ? JSON.parse(res.value) : defaultAvailability();
   }catch(e){ return defaultAvailability(); }
 }
 
@@ -761,13 +784,13 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
     msg.className = 'form-msg ok';
     msg.textContent = "Thank you, " + appt.name + "! Your request for " + appt.date + " at " + appt.time + " has been received. We'll confirm shortly.";
     
-    if(FORMSPREE_ENDPOINT) {
+    if(FORMSPREE_ENDPOINT && FORMSPREE_ENDPOINT !== 'YOUR_FORMSPREE_FORM_ID_HERE') {
       const formData = new FormData(document.getElementById('bookingForm'));
       fetch(FORMSPREE_ENDPOINT, {
         method: 'POST',
         body: formData,
         headers: { 'Accept': 'application/json' }
-      }).catch(err => console.log("Formspree backup log:", err));
+      }).catch(err => console.log("Formspree background log:", err));
     }
 
     document.getElementById('bookingForm').reset();
@@ -819,54 +842,123 @@ function renderAdminIfLoggedIn(){
 }
 
 function adminTab(name){
-  ['dash','appts','avail'].forEach(t => {
+  ['dash','appts','history','avail'].forEach(t => {
     document.getElementById('tab-' + t).style.display = (t === name) ? 'block' : 'none';
   });
   document.querySelectorAll('.a-link[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   if(name === 'avail') renderAvailability();
+  if(name === 'dash' || name === 'history' || name === 'appts') refreshAdmin();
 }
 
-/* ---------------- admin render ---------------- */
+/* ---------------- notification communications pipeline ---------------- */
+function sendPatientNotification(appt, updateType) {
+  let smsText = "";
+  let emailSubject = "";
+  let emailBody = "";
+
+  if (updateType === 'confirmed') {
+    smsText = `Dear ${appt.name}, your appointment request at Rahfan Aesthetic for ${appt.service} on ${appt.date} at ${appt.time} has been CONFIRMED. We look forward to seeing you.`;
+    emailSubject = "Appointment Confirmed - Rahfan Aesthetic Clinic";
+    emailBody = `Dear ${appt.name},\n\nWe are pleased to inform you that your appointment request at Rahfan Aesthetic Clinic has been formally confirmed!\n\nTreatment: ${appt.service}\nDate: ${appt.date}\nTime Slot: ${appt.time}\nLocation: Gulberg, Lahore\n\nIf you need to reschedule, please call us at 0320 2557305.\n\nBest Regards,\nRahfan Aesthetic Clinic`;
+  } else if (updateType === 'cancelled') {
+    smsText = `Dear ${appt.name}, your appointment request at Rahfan Aesthetic for ${appt.service} on ${appt.date} at ${appt.time} has been CANCELLED. Please contact 03202557305 to choose another slot.`;
+    emailSubject = "Appointment Cancelled Update - Rahfan Aesthetic Clinic";
+    emailBody = `Dear ${appt.name},\n\nThis is to notify you that your appointment request for ${appt.service} on ${appt.date} at ${appt.time} has been cancelled.\n\nTo rebook or look for open alternate availability slots, please visit our portal or reach out directly over phone context updates.\n\nWarm regards,\nDr. Rahfan\nRahfan Aesthetic Clinic`;
+  }
+
+  // Action Channel 1: Trigger SMS App Protocol Integration
+  const secureSmsHref = `sms:${appt.phone}?body=${encodeURIComponent(smsText)}`;
+  
+  // Action Channel 2: Trigger Mail Client System App Hook (only if email was provided by patient)
+  if (appt.email && appt.email.length > 2) {
+    const secureEmailHref = `mailto:${appt.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    
+    // Launch Email client and then SMS sequentially safely
+    window.location.href = secureEmailHref;
+    setTimeout(() => {
+      window.open(secureSmsHref, '_blank');
+    }, 1200);
+  } else {
+    // If no email was provided, run the SMS channel instantly
+    window.location.href = secureSmsHref;
+  }
+}
+
+/* ---------------- admin renderer data controllers ---------------- */
 async function refreshAdmin(){
   const list = await getAppointments();
   const total = list.length;
   const pending = list.filter(a => a.status === 'pending').length;
   const confirmed = list.filter(a => a.status === 'confirmed').length;
+  
+  // Get system dynamic present day format matching book inputs
   const todayStr = new Date().toISOString().split('T')[0];
-  const today = list.filter(a => a.date === todayStr).length;
+  const todayList = list.filter(a => a.date === todayStr);
+  document.getElementById('st-today').textContent = todayList.length;
   
   document.getElementById('st-total').textContent = total;
   document.getElementById('st-pending').textContent = pending;
   document.getElementById('st-confirmed').textContent = confirmed;
-  document.getElementById('st-today').textContent = today;
 
+  const todayBookingsBody = document.getElementById('todayBookingsBody');
   const recentBody = document.getElementById('recentBody');
   const apptBody = document.getElementById('apptBody');
+  const historyBody = document.getElementById('historyBody');
 
+  // 1. Render Present Days of Total Bookings
+  if(todayList.length === 0){
+    todayBookingsBody.innerHTML = '<tr><td colspan="4"><div class="empty-state" style="padding: 20px;"><div class="glyph">✓</div>No bookings scheduled for the current day.</div></td></tr>';
+  } else {
+    todayBookingsBody.innerHTML = todayList.map(a => `
+      <tr>
+        <td><b>${escapeHtml(a.name)}</b></td>
+        <td>${escapeHtml(a.service)}</td>
+        <td>${a.time}</td>
+        <td><span class="badge ${a.status}">${a.status}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  // 2. Render Global Recent Requests Logs
   if(list.length === 0){
     recentBody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="glyph">∅</div>No appointment requests yet.</div></td></tr>';
     apptBody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="glyph">∅</div>No appointment requests yet. Bookings from patients will appear here.</div></td></tr>';
-    return;
+  } else {
+    recentBody.innerHTML = list.slice(0,6).map(a => `
+      <tr><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.service)}</td><td>${a.date} · ${a.time}</td><td><span class="badge ${a.status}">${a.status}</span></td></tr>
+    `).join('');
+
+    apptBody.innerHTML = list.map(a => `
+      <tr>
+        <td><b>${escapeHtml(a.name)}</b></td>
+        <td>${escapeHtml(a.phone)}${a.email?'<br><span style="color:var(--ink-soft);font-size:12.5px;">'+escapeHtml(a.email)+'</span>':''}</td>
+        <td>${escapeHtml(a.service)}</td>
+        <td>${a.date} · ${a.time}</td>
+        <td><span class="badge ${a.status}">${a.status}</span></td>
+        <td><div class="row-actions">
+          <button class="mini-btn confirm" onclick="setStatus('${a.id}','confirmed')">Confirm</button>
+          <button class="mini-btn cancel" onclick="setStatus('${a.id}','cancelled')">Cancel</button>
+          <button class="mini-btn del" onclick="deleteAppt('${a.id}')">Delete</button>
+        </div></td>
+      </tr>
+    `).join('');
   }
 
-  recentBody.innerHTML = list.slice(0,6).map(a => `
-    <tr><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.service)}</td><td>${a.date} · ${a.time}</td><td><span class="badge ${a.status}">${a.status}</span></td></tr>
-  `).join('');
-
-  apptBody.innerHTML = list.map(a => `
-    <tr>
-      <td>${escapeHtml(a.name)}</td>
-      <td>${escapeHtml(a.phone)}${a.email?'<br><span style="color:var(--ink-soft);font-size:12.5px;">'+escapeHtml(a.email)+'</span>':''}</td>
-      <td>${escapeHtml(a.service)}</td>
-      <td>${a.date} · ${a.time}</td>
-      <td><span class="badge ${a.status}">${a.status}</span></td>
-      <td><div class="row-actions">
-        <button class="mini-btn confirm" onclick="setStatus('${a.id}','confirmed')">Confirm</button>
-        <button class="mini-btn cancel" onclick="setStatus('${a.id}','cancelled')">Cancel</button>
-        <button class="mini-btn del" onclick="deleteAppt('${a.id}')">Delete</button>
-      </div></td>
-    </tr>
-  `).join('');
+  // 3. Render Patient History View (Isolates Only Confirmed Status logs)
+  const confirmedHistoryList = list.filter(a => a.status === 'confirmed');
+  if(confirmedHistoryList.length === 0){
+    historyBody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="glyph">📜</div>No historical records of confirmed appointments found yet.</div></td></tr>';
+  } else {
+    historyBody.innerHTML = confirmedHistoryList.map(a => `
+      <tr>
+        <td><b>${escapeHtml(a.name)}</b></td>
+        <td>📱 ${escapeHtml(a.phone)} ${a.email ? '<br>✉️ ' + escapeHtml(a.email) : ''}</td>
+        <td>${escapeHtml(a.service)}</td>
+        <td>📆 ${a.date} at ${a.time}</td>
+        <td><span class="badge confirmed">Confirmed &amp; Logged</span></td>
+      </tr>
+    `).join('');
+  }
 }
 
 function escapeHtml(s){
@@ -889,12 +981,11 @@ async function setStatus(id, status){
 
     targetAppt.status = status; 
     await saveAppointments(list); 
-    refreshAdmin(); 
-    showToast('Appointment ' + status); 
+    await refreshAdmin(); 
+    showToast('Appointment marked as ' + status); 
 
-    if (status === 'confirmed') {
-      window.location.href = `mailto:${targetAppt.email || ''}?subject=Appointment Confirmed - Rahfan Aesthetic&body=Dear ${encodeURIComponent(targetAppt.name)}, Your appointment request for ${targetAppt.service} on ${targetAppt.date} at ${targetAppt.time} has been formally confirmed. See you soon!`;
-    }
+    // Dispatches automatic notification delivery sequence 
+    sendPatientNotification(targetAppt, status);
   }
 }
 
@@ -927,11 +1018,12 @@ async function saveAvailability(){
   const avail = {};
   days.forEach(d => { avail[d] = document.getElementById('av-' + d).value; });
   try{
-    localStorage.setItem('availability', JSON.stringify(avail));
+    await window.storage.set('availability', JSON.stringify(avail), true);
     showToast('Availability saved ✓');
-  }catch(e) { showToast('Could not save availability'); }
+  }catch(e){ showToast('Could not save availability'); }
 }
 
+// Self-initializing runtime block
 renderAdminIfLoggedIn();
 </script>
 </body>
