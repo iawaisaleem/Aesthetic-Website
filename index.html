@@ -167,7 +167,7 @@
 
   /* ---------- why / features ---------- */
   .feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:30px;}
-  .feat text-align:center;}
+  .feat{text-align:center;}
   .feat .ic{width:54px;height:54px;border:1px solid var(--clay);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;color:var(--clay-deep);font-size:20px;}
   .feat h3{font-size:16px;margin-bottom:8px;}
   .feat p{font-size:13.5px;color:var(--ink-soft);line-height:1.6;}
@@ -301,6 +301,7 @@
 </head>
 <body>
 
+<!-- ============ TOP BAR ============ -->
 <div class="topbar">
   <div class="container">
     <div class="tb-links">
@@ -311,6 +312,7 @@
   </div>
 </div>
 
+<!-- ============ NAV ============ -->
 <header class="nav">
   <div class="container">
     <div class="brand">
@@ -335,6 +337,7 @@
   </div>
 </header>
 
+<!-- ============ HOME ============ -->
 <div class="page active" id="page-home">
   <section class="hero">
     <div class="container hero-grid">
@@ -421,6 +424,7 @@
   </section>
 </div>
 
+<!-- ============ ABOUT ============ -->
 <div class="page" id="page-about">
   <section>
     <div class="container about-grid">
@@ -458,6 +462,7 @@
   </section>
 </div>
 
+<!-- ============ SERVICES ============ -->
 <div class="page" id="page-services">
   <section style="padding-bottom:0;">
     <div class="container section-head" style="margin-bottom:20px;">
@@ -483,6 +488,7 @@
   </section>
 </div>
 
+<!-- ============ BOOK ============ -->
 <div class="page" id="page-book">
   <section>
     <div class="container">
@@ -543,6 +549,7 @@
   </section>
 </div>
 
+<!-- ============ ADMIN ============ -->
 <div class="page" id="page-admin">
 
   <div id="adminLogin">
@@ -607,6 +614,7 @@
   </div>
 </div>
 
+<!-- ============ FOOTER ============ -->
 <footer>
   <div class="container">
     <div class="foot-grid">
@@ -652,29 +660,37 @@
 
 <script>
 /* IMPORTANT CONFIGURATION VALUE FOR ADMIN EMAIL NOTIFICATIONS */
-// Replace with the unique URL or code Formspree gives you (e.g. 'https://formspree.io/f/xbldqyzk')
+// Replace with the unique URL Formspree gives you (e.g., 'https://formspree.io/f/xbldqyzk')
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/maqglyjw';
 
 /* ---------------- navigation ---------------- */
 function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.nav-link').forEach(a=>a.classList.toggle('active', a.dataset.page===id));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const targetPage = document.getElementById('page-' + id);
+  if (targetPage) targetPage.classList.add('active');
+  
+  document.querySelectorAll('.nav-link').forEach(a => a.classList.toggle('active', a.dataset.page === id));
   document.getElementById('navLinks').classList.remove('open');
-  window.scrollTo({top:0,behavior:'smooth'});
-  if(id==='admin') renderAdminIfLoggedIn();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  if(id === 'admin') renderAdminIfLoggedIn();
 }
-document.querySelectorAll('.nav-link').forEach(a=>{
-  a.addEventListener('click', e=>{ e.preventDefault(); showPage(a.dataset.page); });
+
+document.querySelectorAll('.nav-link').forEach(a => {
+  a.addEventListener('click', e => { 
+    e.preventDefault(); 
+    showPage(a.dataset.page); 
+  });
 });
-document.getElementById('menuToggle').addEventListener('click', ()=>{
+
+document.getElementById('menuToggle').addEventListener('click', () => {
   document.getElementById('navLinks').classList.toggle('open');
 });
 
 function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2600);
+  const t = document.getElementById('toast');
+  t.textContent = msg; 
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
 }
 
 /* ---------------- storage helpers ---------------- */
@@ -684,28 +700,32 @@ async function getAppointments(){
     return res ? JSON.parse(res.value) : [];
   }catch(e){ return []; }
 }
+
 async function saveAppointments(list){
-  try{ await window.storage.set('appointments', JSON.stringify(list), true); }catch(e){}
+  try{ 
+    await window.storage.set('appointments', JSON.stringify(list), true); 
+  }catch(e){}
 }
+
 async function getAvailability(){
   try{
     const res = await window.storage.get('availability', true);
     return res ? JSON.parse(res.value) : defaultAvailability();
   }catch(e){ return defaultAvailability(); }
 }
+
 function defaultAvailability(){
   return {Mon:"Open",Tue:"Open",Wed:"Open",Thu:"Open",Fri:"Open",Sat:"Open",Sun:"Closed"};
 }
 
 /* ---------------- booking form ---------------- */
-document.getElementById('bookingForm').addEventListener('submit', async e=>{
+document.getElementById('bookingForm').addEventListener('submit', async e => {
   e.preventDefault();
   const msg = document.getElementById('bookMsg');
   
   const chosenDateVal = document.getElementById('bk-date').value;
   const chosenTimeVal = document.getElementById('bk-time').value;
   
-  // Requirement 1: Verify Clinic Weekly Off Days
   const dateObj = new Date(chosenDateVal);
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const chosenDayName = daysOfWeek[dateObj.getDay()];
@@ -717,7 +737,6 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
     return;
   }
 
-  // Requirement 3: Check Time Slot Double Booking Conflict
   const list = await getAppointments();
   const isTimeSlotTaken = list.some(appt => appt.date === chosenDateVal && appt.time === chosenTimeVal && appt.status === 'confirmed');
   if (isTimeSlotTaken) {
@@ -727,7 +746,7 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
   }
 
   const appt = {
-    id: 'apt_'+Date.now(),
+    id: 'apt_' + Date.now(),
     name: document.getElementById('bk-name').value.trim(),
     phone: document.getElementById('bk-phone').value.trim(),
     email: document.getElementById('bk-email').value.trim(),
@@ -740,102 +759,110 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
   };
 
   if(!appt.name || !appt.phone || !appt.service || !appt.date || !appt.time){
-    msg.className='form-msg err'; msg.textContent='Please fill in all required fields.'; return;
+    msg.className = 'form-msg err'; 
+    msg.textContent = 'Please fill in all required fields.'; 
+    return;
   }
 
   try{
     list.unshift(appt);
     await saveAppointments(list);
-    msg.className='form-msg ok';
-    msg.textContent="Thank you, "+appt.name+"! Your request for "+appt.date+" at "+appt.time+" has been received. We'll confirm shortly.";
+    msg.className = 'form-msg ok';
+    msg.textContent = "Thank you, " + appt.name + "! Your request for " + appt.date + " at " + appt.time + " has been received. We'll confirm shortly.";
     
-    // Requirement 2: Deliver Form Submission Alert directly to Admin via Formspree
     if(FORMSPREE_ENDPOINT && FORMSPREE_ENDPOINT !== 'YOUR_FORMSPREE_FORM_ID_HERE') {
       const formData = new FormData(document.getElementById('bookingForm'));
       fetch(FORMSPREE_ENDPOINT, {
         method: 'POST',
         body: formData,
         headers: { 'Accept': 'application/json' }
-      }).catch(err => console.log("Formspree alert background log:", err));
+      }).catch(err => console.log("Formspree background log:", err));
     }
 
     document.getElementById('bookingForm').reset();
     showToast('Appointment request sent ✓');
   }catch(err){
-    msg.className='form-msg err'; msg.textContent='Something went wrong saving your request.';
+    msg.className = 'form-msg err'; 
+    msg.textContent = 'Something went wrong saving your request.';
   }
 });
-document.getElementById('bk-date').min = new Date().toISOString().split('T')[0];
+
+if(document.getElementById('bk-date')) {
+  document.getElementById('bk-date').min = new Date().toISOString().split('T')[0];
+}
 
 /* ---------------- admin auth ---------------- */
-const ADMIN_USER='admin', ADMIN_PASS='rahfan123';
+const ADMIN_USER = 'admin', ADMIN_PASS = 'rahfan123';
+let inMemoryAdminFlag = false;
+
 function adminLogin(){
-  const u=document.getElementById('ad-user').value.trim();
-  const p=document.getElementById('ad-pass').value.trim();
-  const msg=document.getElementById('loginMsg');
-  if(u===ADMIN_USER && p===ADMIN_PASS){
-    sessionStorageSafeSet('rahfan_admin','1');
-    document.getElementById('adminLogin').style.display='none';
-    document.getElementById('adminPanel').style.display='block';
+  const u = document.getElementById('ad-user').value.trim();
+  const p = document.getElementById('ad-pass').value.trim();
+  const msg = document.getElementById('loginMsg');
+  if(u === ADMIN_USER && p === ADMIN_PASS){
+    inMemoryAdminFlag = true;
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
     refreshAdmin();
   }else{
-    msg.className='form-msg err'; msg.textContent='Incorrect username or password.';
+    msg.className = 'form-msg err'; 
+    msg.textContent = 'Incorrect username or password.';
   }
 }
+
 function adminLogout(){
-  sessionStorageSafeSet('rahfan_admin','');
-  document.getElementById('adminPanel').style.display='none';
-  document.getElementById('adminLogin').style.display='block';
+  inMemoryAdminFlag = false;
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('adminLogin').style.display = 'block';
 }
-let inMemoryAdminFlag=false;
-function sessionStorageSafeSet(k,v){
-  inMemoryAdminFlag = (v==='1');
-}
+
 function renderAdminIfLoggedIn(){
   if(inMemoryAdminFlag){
-    document.getElementById('adminLogin').style.display='none';
-    document.getElementById('adminPanel').style.display='block';
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
     refreshAdmin();
   }else{
-    document.getElementById('adminLogin').style.display='block';
-    document.getElementById('adminPanel').style.display='none';
+    document.getElementById('adminLogin').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'none';
   }
 }
+
 function adminTab(name){
-  ['dash','appts','avail'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display = (t===name)?'block':'none';
+  ['dash','appts','avail'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = (t === name) ? 'block' : 'none';
   });
-  document.querySelectorAll('.a-link[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-  if(name==='avail') renderAvailability();
+  document.querySelectorAll('.a-link[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  if(name === 'avail') renderAvailability();
 }
 
 /* ---------------- admin render ---------------- */
 async function refreshAdmin(){
   const list = await getAppointments();
-  const total=list.length;
-  const pending=list.filter(a=>a.status==='pending').length;
-  const confirmed=list.filter(a=>a.status==='confirmed').length;
-  const todayStr=new Date().toISOString().split('T')[0];
-  const today=list.filter(a=>a.date===todayStr).length;
-  document.getElementById('st-total').textContent=total;
-  document.getElementById('st-pending').textContent=pending;
-  document.getElementById('st-confirmed').textContent=confirmed;
-  document.getElementById('st-today').textContent=today;
+  const total = list.length;
+  const pending = list.filter(a => a.status === 'pending').length;
+  const confirmed = list.filter(a => a.status === 'confirmed').length;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const today = list.filter(a => a.date === todayStr).length;
+  
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-pending').textContent = pending;
+  document.getElementById('st-confirmed').textContent = confirmed;
+  document.getElementById('st-today').textContent = today;
 
-  const recentBody=document.getElementById('recentBody');
-  const apptBody=document.getElementById('apptBody');
+  const recentBody = document.getElementById('recentBody');
+  const apptBody = document.getElementById('apptBody');
 
-  if(list.length===0){
-    recentBody.innerHTML='<tr><td colspan="4"><div class="empty-state"><div class="glyph">∅</div>No appointment requests yet.</div></td></tr>';
-    apptBody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div class="glyph">∅</div>No appointment requests yet. Bookings from patients will appear here.</div></td></tr>';
+  if(list.length === 0){
+    recentBody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="glyph">∅</div>No appointment requests yet.</div></td></tr>';
+    apptBody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="glyph">∅</div>No appointment requests yet. Bookings from patients will appear here.</div></td></tr>';
     return;
   }
 
-  recentBody.innerHTML = list.slice(0,6).map(a=>`
+  recentBody.innerHTML = list.slice(0,6).map(a => `
     <tr><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.service)}</td><td>${a.date} · ${a.time}</td><td><span class="badge ${a.status}">${a.status}</span></td></tr>
   `).join('');
 
-  apptBody.innerHTML = list.map(a=>`
+  apptBody.innerHTML = list.map(a => `
     <tr>
       <td>${escapeHtml(a.name)}</td>
       <td>${escapeHtml(a.phone)}${a.email?'<br><span style="color:var(--ink-soft);font-size:12.5px;">'+escapeHtml(a.email)+'</span>':''}</td>
@@ -850,17 +877,17 @@ async function refreshAdmin(){
     </tr>
   `).join('');
 }
+
 function escapeHtml(s){
-  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 async function setStatus(id, status){
   const list = await getAppointments();
-  const idx = list.findIndex(a=>a.id===id);
-  if(idx>-1){ 
+  const idx = list.findIndex(a => a.id === id);
+  if(idx > -1){ 
     const targetAppt = list[idx];
 
-    // Requirement 3: Enforce double-booking validation logic inside admin controls
     if(status === 'confirmed') {
       const alreadyConfirmed = list.some(a => a.date === targetAppt.date && a.time === targetAppt.time && a.status === 'confirmed' && a.id !== id);
       if(alreadyConfirmed) {
@@ -869,12 +896,11 @@ async function setStatus(id, status){
       }
     }
 
-    targetAppt.status=status; 
+    targetAppt.status = status; 
     await saveAppointments(list); 
     refreshAdmin(); 
-    showToast('Appointment '+status); 
+    showToast('Appointment ' + status); 
 
-    // Requirement 2: Deliver Admin confirmation notice out to Patient
     if (status === 'confirmed') {
       window.location.href = `mailto:${targetAppt.email || ''}?subject=Appointment Confirmed - Rahfan Aesthetic&body=Dear ${encodeURIComponent(targetAppt.name)}, Your appointment request for ${targetAppt.service} on ${targetAppt.date} at ${targetAppt.time} has been formally confirmed. See you soon!`;
     }
@@ -884,24 +910,39 @@ async function setStatus(id, status){
 async function deleteAppt(id){
   if(!confirm('Delete this appointment request?')) return;
   let list = await getAppointments();
-  list = list.filter(a=>a.id!==id);
+  list = list.filter(a => a.id !== id);
   await saveAppointments(list);
   refreshAdmin();
   showToast('Appointment deleted');
 }
 
-async function renderAvailability(){\n  const avail = await getAvailability();\n  const grid=document.getElementById('availGrid');\n  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];\n  grid.innerHTML = days.map(d=>`\n    <div class=\"day-card\">\n      <div class=\"d-name\">${d}</div>\n      <select id=\"av-${d}\">\n        <option value=\"Open\" ${avail[d]==='Open'?'selected':''}>Open</option>\n        <option value=\"Closed\" ${avail[d]==='Closed'?'selected':''}>Closed</option>\n      </select>\n    </div>\n  `).join('');\n}
+async function renderAvailability(){
+  const avail = await getAvailability();
+  const grid = document.getElementById('availGrid');
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  grid.innerHTML = days.map(d => `
+    <div class="day-card">
+      <div class="d-name">${d}</div>
+      <select id="av-${d}">
+        <option value="Open" ${avail[d]==='Open'?'selected':''}>Open</option>
+        <option value="Closed" ${avail[d]==='Closed'?'selected':''}>Closed</option>
+      </select>
+    </div>
+  `).join('');
+}
+
 async function saveAvailability(){
-  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const avail={};
-  days.forEach(d=>{ avail[d]=document.getElementById('av-'+d).value; });
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const avail = {};
+  days.forEach(d => { avail[d] = document.getElementById('av-' + d).value; });
   try{
     await window.storage.set('availability', JSON.stringify(avail), true);
     showToast('Availability saved ✓');
   }catch(e){ showToast('Could not save availability'); }
 }
 
-init: renderAdminIfLoggedIn();
+// Self-initializing runtime block
+renderAdminIfLoggedIn();
 </script>
 </body>
 </html>
