@@ -6,13 +6,6 @@
 <title>Rahfan Aesthetic — Skin & Aesthetic Clinic, Lahore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script type="text/javascript">
-  (function() {
-    // REQUIRED: Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key
-    emailjs.init("YOUR_PUBLIC_KEY");
-  })();
-</script>
 <style>
   :root{
     --cream:#FAF5EF;
@@ -174,7 +167,7 @@
 
   /* ---------- why / features ---------- */
   .feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:30px;}
-  .feat{text-align:center;}
+  .feat text-align:center;}
   .feat .ic{width:54px;height:54px;border:1px solid var(--clay);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;color:var(--clay-deep);font-size:20px;}
   .feat h3{font-size:16px;margin-bottom:8px;}
   .feat p{font-size:13.5px;color:var(--ink-soft);line-height:1.6;}
@@ -509,13 +502,13 @@
         </div>
         <form class="book-form" id="bookingForm">
           <div class="field-row">
-            <div class="field"><label>Full Name</label><input type="text" id="bk-name" required placeholder="Your name"></div>
-            <div class="field"><label>Phone Number</label><input type="tel" id="bk-phone" required placeholder="03XX XXXXXXX"></div>
+            <div class="field"><label>Full Name</label><input type="text" id="bk-name" name="Patient Name" required placeholder="Your name"></div>
+            <div class="field"><label>Phone Number</label><input type="tel" id="bk-phone" name="Phone Number" required placeholder="03XX XXXXXXX"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Email (optional)</label><input type="email" id="bk-email" placeholder="you@example.com"></div>
+            <div class="field"><label>Email (optional)</label><input type="email" id="bk-email" name="Email" placeholder="you@example.com"></div>
             <div class="field"><label>Service</label>
-              <select id="bk-service" required>
+              <select id="bk-service" name="Requested Service" required>
                 <option value="">Select a service</option>
                 <option>Laser Hair Reduction</option>
                 <option>Acne & Scar Treatment</option>
@@ -531,9 +524,9 @@
             </div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Preferred Date</label><input type="date" id="bk-date" required></div>
+            <div class="field"><label>Preferred Date</label><input type="date" id="bk-date" name="Appointment Date" required></div>
             <div class="field"><label>Preferred Time</label>
-              <select id="bk-time" required>
+              <select id="bk-time" name="Appointment Time" required>
                 <option value="">Select a time</option>
                 <option>11:00 AM</option><option>12:00 PM</option><option>1:00 PM</option>
                 <option>2:00 PM</option><option>3:00 PM</option><option>4:00 PM</option>
@@ -541,7 +534,7 @@
               </select>
             </div>
           </div>
-          <div class="field"><label>Notes (optional)</label><textarea id="bk-notes" rows="3" placeholder="Any concerns or details you'd like us to know"></textarea></div>
+          <div class="field"><label>Notes (optional)</label><textarea id="bk-notes" name="Patient Notes" rows="3" placeholder="Any concerns or details you'd like us to know"></textarea></div>
           <button type="submit" class="submit-btn">Confirm Booking Request</button>
           <div class="form-msg" id="bookMsg"></div>
         </form>
@@ -658,6 +651,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* IMPORTANT CONFIGURATION VALUE FOR ADMIN EMAIL NOTIFICATIONS */
+// Replace with the unique URL or code Formspree gives you (e.g. 'https://formspree.io/f/xbldqyzk')
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/maqglyjw';
+
 /* ---------------- navigation ---------------- */
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -716,7 +713,7 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
   const availability = await getAvailability();
   if (availability[chosenDayName] === 'Closed') {
     msg.className = 'form-msg err';
-    msg.textContent = `The clinic is closed on ${chosenDayName}days. Please choose another date.`;
+    msg.textContent = `The clinic is off on ${chosenDayName}days. Please choose another day.`;
     return;
   }
 
@@ -725,7 +722,7 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
   const isTimeSlotTaken = list.some(appt => appt.date === chosenDateVal && appt.time === chosenTimeVal && appt.status === 'confirmed');
   if (isTimeSlotTaken) {
     msg.className = 'form-msg err';
-    msg.textContent = `This time slot (${chosenTimeVal} on ${chosenDateVal}) has already been booked. Please pick a different time.`;
+    msg.textContent = `This time slot (${chosenTimeVal} on ${chosenDateVal}) is already confirmed for another patient. Please pick a different time.`;
     return;
   }
 
@@ -752,22 +749,20 @@ document.getElementById('bookingForm').addEventListener('submit', async e=>{
     msg.className='form-msg ok';
     msg.textContent="Thank you, "+appt.name+"! Your request for "+appt.date+" at "+appt.time+" has been received. We'll confirm shortly.";
     
-    // Requirement 2: Email alert to Admin on dynamic booking submission
-    sendEmailNotification("admin_notification_template", {
-      admin_email: "awaisalee000@gmail.com",
-      patient_name: appt.name,
-      patient_phone: appt.phone,
-      patient_email: appt.email || "N/A",
-      chosen_service: appt.service,
-      chosen_date: appt.date,
-      chosen_time: appt.time,
-      notes: appt.notes || "None"
-    });
+    // Requirement 2: Deliver Form Submission Alert directly to Admin via Formspree
+    if(FORMSPREE_ENDPOINT && FORMSPREE_ENDPOINT !== 'YOUR_FORMSPREE_FORM_ID_HERE') {
+      const formData = new FormData(document.getElementById('bookingForm'));
+      fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      }).catch(err => console.log("Formspree alert background log:", err));
+    }
 
     document.getElementById('bookingForm').reset();
     showToast('Appointment request sent ✓');
   }catch(err){
-    msg.className='form-msg err'; msg.textContent='Something went wrong saving your request. Please call 0320 2557305 directly.';
+    msg.className='form-msg err'; msg.textContent='Something went wrong saving your request.';
   }
 });
 document.getElementById('bk-date').min = new Date().toISOString().split('T')[0];
@@ -865,11 +860,11 @@ async function setStatus(id, status){
   if(idx>-1){ 
     const targetAppt = list[idx];
 
-    // Requirement 3: Prevent confirmation if that specific slot is already occupied
+    // Requirement 3: Enforce double-booking validation logic inside admin controls
     if(status === 'confirmed') {
       const alreadyConfirmed = list.some(a => a.date === targetAppt.date && a.time === targetAppt.time && a.status === 'confirmed' && a.id !== id);
       if(alreadyConfirmed) {
-        alert(`Cannot confirm. Another appointment is already confirmed at ${targetAppt.time} on ${targetAppt.date}.`);
+        alert(`Cannot confirm. Another appointment has already been confirmed at ${targetAppt.time} on ${targetAppt.date}.`);
         return;
       }
     }
@@ -879,15 +874,9 @@ async function setStatus(id, status){
     refreshAdmin(); 
     showToast('Appointment '+status); 
 
-    // Requirement 2: Send confirmation email routing directly to patient
-    if (status === 'confirmed' && targetAppt.email) {
-      sendEmailNotification("patient_confirmation_template", {
-        patient_email: targetAppt.email,
-        patient_name: targetAppt.name,
-        chosen_service: targetAppt.service,
-        chosen_date: targetAppt.date,
-        chosen_time: targetAppt.time
-      });
+    // Requirement 2: Deliver Admin confirmation notice out to Patient
+    if (status === 'confirmed') {
+      window.location.href = `mailto:${targetAppt.email || ''}?subject=Appointment Confirmed - Rahfan Aesthetic&body=Dear ${encodeURIComponent(targetAppt.name)}, Your appointment request for ${targetAppt.service} on ${targetAppt.date} at ${targetAppt.time} has been formally confirmed. See you soon!`;
     }
   }
 }
@@ -901,20 +890,7 @@ async function deleteAppt(id){
   showToast('Appointment deleted');
 }
 
-async function renderAvailability(){
-  const avail = await getAvailability();
-  const grid=document.getElementById('availGrid');
-  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  grid.innerHTML = days.map(d=>`
-    <div class="day-card">
-      <div class="d-name">${d}</div>
-      <select id="av-${d}">
-        <option value="Open" ${avail[d]==='Open'?'selected':''}>Open</option>
-        <option value="Closed" ${avail[d]==='Closed'?'selected':''}>Closed</option>
-      </select>
-    </div>
-  `).join('');
-}
+async function renderAvailability(){\n  const avail = await getAvailability();\n  const grid=document.getElementById('availGrid');\n  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];\n  grid.innerHTML = days.map(d=>`\n    <div class=\"day-card\">\n      <div class=\"d-name\">${d}</div>\n      <select id=\"av-${d}\">\n        <option value=\"Open\" ${avail[d]==='Open'?'selected':''}>Open</option>\n        <option value=\"Closed\" ${avail[d]==='Closed'?'selected':''}>Closed</option>\n      </select>\n    </div>\n  `).join('');\n}
 async function saveAvailability(){
   const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const avail={};
@@ -923,17 +899,6 @@ async function saveAvailability(){
     await window.storage.set('availability', JSON.stringify(avail), true);
     showToast('Availability saved ✓');
   }catch(e){ showToast('Could not save availability'); }
-}
-
-/* Helper implementation to issue direct asynchronous calls out to EmailJS */
-function sendEmailNotification(templateId, templateParams) {
-  // Replace 'YOUR_SERVICE_ID' with your real service ID from EmailJS dashboards
-  emailjs.send("YOUR_SERVICE_ID", templateId, templateParams)
-    .then(() => {
-       console.log("Email tracking notification sent cleanly.");
-    }, (err) => {
-       console.error("Failed sending message out via EmailJS...", err);
-    });
 }
 
 init: renderAdminIfLoggedIn();
