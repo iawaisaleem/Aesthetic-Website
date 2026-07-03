@@ -706,9 +706,16 @@
   patientConfirmedTemplateId: "template_m83jscb",
   patientCancelledTemplateId: "template_anw8w0n",
   adminEmailAddress: "awaisalee000@gmail.com", // Your admin email
-      
-      smsGatewayEnabled: false, 
-      smsApiEndpoint: "https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json"
+
+      // SMS is now relayed through our own small backend (see /server) so
+      // that Twilio credentials never have to live in this client-side
+      // file. Update smsApiEndpoint to your deployed backend's URL once
+      // it's hosted (e.g. "https://your-backend.example.com/api/send-sms").
+      // While smsApiEndpoint points at localhost and nothing is running
+      // there, sendPatientSMS() automatically falls back to a console-only
+      // mock so nothing on the page breaks.
+      smsGatewayEnabled: true,
+      smsApiEndpoint: "http://localhost:4000/api/send-sms"
     };
 
     let emailjsReady = false;
@@ -915,14 +922,6 @@
 
           refreshAdmin();
 
-          function describeEmailError(err) {
-            if (!err) return 'Unknown error';
-            if (typeof err === 'string') return err;
-            if (err.text) return err.text;
-            if (err.message) return err.message;
-            try { return JSON.stringify(err); } catch (e) { return String(err); }
-          }
-
           // 1. Core Admin Email Dispatch Route (Awaited to ensure completion)
           if (emailjsReady) {
             try {
@@ -1062,25 +1061,48 @@
     }
 
     function sendPatientSMS(apptObject, textMessageContent) {
+      if (!apptObject.phone) return;
+
       if (!GLOBAL_CONFIG.smsGatewayEnabled) {
         console.log(`[SMS MOCK ROUTE] To Phone: ${apptObject.phone} | Content: ${textMessageContent}`);
         return;
       }
 
+      // FIX (security): this used to call Twilio's REST API directly from
+      // the browser with a hardcoded Account SID/Auth Token in the source
+      // code — anyone could open dev tools or view-source, copy those
+      // credentials, and send SMS (i.e. spend money) on your Twilio
+      // account. It also would not have worked technically, since Twilio's
+      // API does not allow cross-origin requests from browsers.
+      // Real SMS now goes through our own backend (/server), which holds
+      // the Twilio credentials server-side and never exposes them here.
+      // This call is fire-and-forget: it never blocks or breaks the admin
+      // UI, and it logs (rather than throws) if the backend is unreachable.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
       fetch(GLOBAL_CONFIG.smsApiEndpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa('YOUR_ACCOUNT_SID:YOUR_AUTH_TOKEN')
-        },
-        body: JSON.stringify({
-          To: apptObject.phone,
-          From: 'RahfanClinic',
-          Body: textMessageContent
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: apptObject.phone, message: textMessageContent }),
+        signal: controller.signal
       })
-      .then(res => console.log('SMS pipeline response status code: ', res.status))
-      .catch(err => console.error('SMS system infrastructure exception: ', err));
+        .then(async res => {
+          clearTimeout(timeoutId);
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            console.log('[sms] delivered via backend:', data);
+          } else {
+            console.warn('[sms] backend rejected the request:', data.error || res.status);
+          }
+        })
+        .catch(err => {
+          clearTimeout(timeoutId);
+          console.warn(
+            '[sms] Could not reach the notification backend (is it running/deployed at ' +
+            GLOBAL_CONFIG.smsApiEndpoint + '?). SMS was not sent. Details:', err
+          );
+        });
     }
 
     function switchAdminTab(targetTabId) {
@@ -1106,6 +1128,14 @@
                       .replace(/>/g, '&gt;')
                       .replace(/"/g, '&quot;')
                       .replace(/'/g, '&#39;');
+    }
+
+    function describeEmailError(err) {
+      if (!err) return 'Unknown error';
+      if (typeof err === 'string') return err;
+      if (err.text) return err.text;
+      if (err.message) return err.message;
+      try { return JSON.stringify(err); } catch (e) { return String(err); }
     }
 
     function refreshAdmin() {
@@ -1187,9 +1217,12 @@
         if (emailjsReady) {
           try {
             await sendPatientNotification(targetAppt, status);
+            console.log(`[email] ${status} notification sent to ${targetAppt.email || '(no email on file)'}`);
           } catch (e) {
-            console.error("Status update email delivery failed:", e);
+            console.warn(`[email] Failed to send ${status} notification to patient:`, describeEmailError(e));
           }
+        } else {
+          console.warn('[email] EmailJS is not ready — skipped patient notification email.');
         }
 
         const customMessageText = status === 'confirmed' 
