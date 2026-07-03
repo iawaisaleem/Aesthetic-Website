@@ -1195,43 +1195,79 @@
       tbody.innerHTML = renderedRows;
     }
 
-    async function updateAppointmentStatus(id, status) {
-      let list = getAppointments();
-      const targetAppt = list.find(a => a.id === id);
-      
-      if(targetAppt) {
+    // Replace your current updateAppointmentStatus and sendPatientNotification with these corrected versions:
+
+async function updateAppointmentStatus(id, status) {
+    let list = getAppointments();
+    const targetAppt = list.find(a => a.id === id);
+    
+    if(targetAppt) {
+        // Validation for date conflict
         if (status === 'confirmed') {
-          const targetDayAbbrev = getDayOfWeekAbbreviation(targetAppt.date);
-          const activeClinicMap = getAvailability();
-          if (activeClinicMap[targetDayAbbrev] === 'Closed') {
-            alert(`Operational structural conflict: Cannot approve booking. The clinic map configuration is marked as 'Closed' on ${targetDayAbbrev} (${targetAppt.date}).`);
-            return;
-          }
+            const targetDayAbbrev = getDayOfWeekAbbreviation(targetAppt.date);
+            const activeClinicMap = getAvailability();
+            if (activeClinicMap[targetDayAbbrev] === 'Closed') {
+                alert(`Operational conflict: The clinic is marked as 'Closed' on ${targetDayAbbrev}.`);
+                return;
+            }
         }
         
+        // Update Status
         targetAppt.status = status; 
         saveAppointments(list); 
         refreshAdmin(); 
         showToast('Status successfully marked as ' + status); 
         
+        // --- NOTIFICATION PIPELINE ---
+        // 1. Send Email Notification
         if (emailjsReady) {
-          try {
-            await sendPatientNotification(targetAppt, status);
-            console.log(`[email] ${status} notification sent to ${targetAppt.email || '(no email on file)'}`);
-          } catch (e) {
-            console.warn(`[email] Failed to send ${status} notification to patient:`, describeEmailError(e));
-          }
-        } else {
-          console.warn('[email] EmailJS is not ready — skipped patient notification email.');
+            try {
+                await sendPatientNotification(targetAppt, status);
+                console.log("Email notification sent for status:", status);
+            } catch (e) {
+                console.error("Status update email delivery failed:", e);
+                showToast("Status updated, but email notification failed.");
+            }
         }
 
+        // 2. Send SMS Notification
         const customMessageText = status === 'confirmed' 
-          ? `Great news ${targetAppt.name}! Your appointment for ${targetAppt.service} on ${targetAppt.date} at ${targetAppt.time} has been officially confirmed.`
-          : `Hello ${targetAppt.name}. Unfortunately, your appointment request for ${targetAppt.date} has been cancelled. Please contact us to reschedule.`;
+            ? `Dear ${targetAppt.name}, your appointment at Rahfan Aesthetic on ${targetAppt.date} is confirmed.`
+            : `Dear ${targetAppt.name}, your appointment on ${targetAppt.date} has been cancelled. Please contact us to reschedule.`;
         
         sendPatientSMS(targetAppt, customMessageText);
-      }
     }
+}
+
+function sendPatientNotification(apptObject, status) {
+    return new Promise((resolve, reject) => {
+        if(!apptObject.email) return resolve();
+
+        // Ensure these template IDs match your EmailJS dashboard setup
+        const templateMapping = {
+            'confirmed': GLOBAL_CONFIG.patientConfirmedTemplateId,
+            'cancelled': GLOBAL_CONFIG.patientCancelledTemplateId,
+            'pending': GLOBAL_CONFIG.patientPendingTemplateId
+        };
+
+        const emailTemplateId = templateMapping[status];
+        if(!emailTemplateId) return resolve();
+
+        let emailParams = {
+            patient_name: apptObject.name,
+            patient_email: apptObject.email,
+            requested_service: apptObject.service,
+            appointment_date: apptObject.date,
+            appointment_time: apptObject.time,
+            clinic_contact: "+92 320 2557305", // Updated contact
+            current_status: status.toUpperCase()
+        };
+
+        emailjs.send(GLOBAL_CONFIG.emailjsServiceId, emailTemplateId, emailParams)
+            .then((res) => resolve(res))
+            .catch((error) => reject(error.text || error));
+    });
+}
 
     function deleteAppointmentRecord(id) {
       if(!confirm('Are you sure you want to permanently delete this booking?')) return;
