@@ -237,21 +237,21 @@
   .panel { background: var(--bg-pure); border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 44px; box-shadow: var(--shadow-sm); }
   .panel-title { padding: 20px 28px; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border-light); background: var(--bg-pure); color: var(--primary-dark); }
   
-  /* Responsive Data Tables Layout Mechanics */
+  /* Responsive Data Tables Layout Mechanics (FIXED FOR BUTTON VISIBILITY) */
   .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+  table { width: 100%; border-collapse: collapse; text-align: left; }
   thead th {
     font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted);
-    padding: 18px 28px; border-bottom: 1px solid var(--border-light); background: #FAFBFB;
+    padding: 18px 24px; border-bottom: 1px solid var(--border-light); background: #FAFBFB;
   }
-  tbody td { padding: 20px 28px; font-size: 15px; border-bottom: 1px solid var(--border-light); color: var(--primary-soft); vertical-align: middle; }
+  tbody td { padding: 18px 24px; font-size: 14px; border-bottom: 1px solid var(--border-light); color: var(--primary-soft); vertical-align: middle; }
   tbody tr:last-child td { border-bottom: none; }
   
   .badge { font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 50px; letter-spacing: .04em; text-transform: uppercase; display: inline-block; }
   .badge.pending { background: #FFF4E5; color: #B26A00; }
   .badge.confirmed { background: #E6F4EA; color: #137333; }
   .badge.cancelled { background: #FCE8E6; color: #C5221F; }
-  .row-actions { display: flex; gap: 8px; }
+  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   
   .mini-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.02em; }
   .mini-btn.confirm { border-color: #137333; color: #137333; background: #FAFDFB; }
