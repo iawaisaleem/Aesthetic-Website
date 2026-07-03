@@ -237,7 +237,7 @@
   .panel { background: var(--bg-pure); border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 44px; box-shadow: var(--shadow-sm); }
   .panel-title { padding: 20px 28px; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border-light); background: var(--bg-pure); color: var(--primary-dark); }
   
-  /* Responsive Data Tables UI Architecture - STRUCTURAL BUG FIXED */
+  /* Responsive Data Tables UI Architecture */
   .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { width: 100%; border-collapse: collapse; text-align: left; table-layout: auto; }
   thead th {
@@ -847,7 +847,7 @@
       const pNotes = document.getElementById('pNotes').value.trim();
 
       msgBox.className = "form-msg";
-      msgBox.style.display = "none";
+      msgBox.removeAttribute("style");
 
       // 1. Structural Availability Mapping Intersection Check
       const targetDayAbbrev = getDayOfWeekAbbreviation(pDate);
@@ -925,13 +925,10 @@
       };
 
       if(status === 'pending') {
-        // Linked directly to EmailJS "Intake Request Recieved Template"
         emailTemplateId = "template_7bsh296"; 
       } else if(status === 'confirmed') {
-        // Linked directly to EmailJS "Booking Confirmed Template"
         emailTemplateId = "template_m83jscb"; 
       } else if(status === 'cancelled') {
-        // Linked directly to EmailJS "Booking Cancelled/Reschedule Template"
         emailTemplateId = "template_anw8w0n"; 
       }
 
@@ -969,12 +966,10 @@
     }
 
     function refreshAdmin() {
-      // Guard metrics rendering execution framework loop if view is unmounted
       if(!sessionStorage.getItem('adminAuthenticated')) return;
 
       const list = getAppointments();
       
-      // Calculate dynamic count summary metrics
       let total = list.length;
       let pending = list.filter(a => a.status === 'pending').length;
       let confirmed = list.filter(a => a.status === 'confirmed').length;
@@ -991,7 +986,6 @@
         return;
       }
 
-      // Order by inverse sequential chronologies
       const renderedRows = list.slice().reverse().map(appt => {
         const safeName = sanitizeHtmlEntities(appt.name);
         const safePhone = sanitizeHtmlEntities(appt.phone);
@@ -1033,7 +1027,6 @@
       const targetAppt = list.find(a => a.id === id);
       
       if(targetAppt) {
-        // Business logic constraint validation check step
         if (status === 'confirmed') {
           const targetDayAbbrev = getDayOfWeekAbbreviation(targetAppt.date);
           const activeClinicMap = getAvailability();
@@ -1066,11 +1059,11 @@
       const grid = document.getElementById('availGrid');
       const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
       grid.innerHTML = days.map(d => `
-        <div class=\"day-card\">
-          <div class=\"d-name\">${d}</div>
-          <select id=\"av-${d}\">
-            <option value=\"Open\" ${avail[d]==='Open'?'selected':''}>Open</option>
-            <option value=\"Closed\" ${avail[d]==='Closed'?'selected':''}>Closed</option>
+        <div class="day-card">
+          <div class="d-name">${d}</div>
+          <select id="av-${d}">
+            <option value="Open" ${avail[d]==='Open'?'selected':''}>Open</option>
+            <option value="Closed" ${avail[d]==='Closed'?'selected':''}>Closed</option>
           </select>
         </div>
       `).join('');
@@ -1104,18 +1097,15 @@
       setTimeout(() => { toast.classList.remove('show'); }, 3500);
     }
 
-    // Monitor Hash Routings and Init Application Context Loops
     window.addEventListener('hashchange', handleUrlHashRouting);
     
     window.addEventListener('DOMContentLoaded', () => {
-      // 1. Initial setup date thresholds restriction constraint logic
       const dateInput = document.getElementById('pDate');
       if(dateInput) {
         const today = new Date().toISOString().split('T')[0];
         dateInput.min = today;
       }
       
-      // 2. Refresh runtime frameworks values configurations parameters 
       handleUrlHashRouting();
       refreshAdmin();
     });
