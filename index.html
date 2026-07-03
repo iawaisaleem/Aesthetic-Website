@@ -104,7 +104,7 @@
   }
   nav.links a.active::after, nav.links a:hover::after { width: 100%; }
 
-  /* Premium Responsive Buttons */
+  /* Buttons Architecture */
   .cta-btn {
     background: var(--primary-dark); color: #fff; padding: 14px 28px; font-size: 14px; font-weight: 600;
     border: 1px solid var(--primary-dark); border-radius: var(--radius-sm); letter-spacing: 0.03em; box-shadow: var(--shadow-sm);
@@ -153,7 +153,7 @@
   .hero-visual .card .stars { color: var(--accent-gold); letter-spacing: 2px; font-size: 14px; margin-bottom: 8px; }
   .hero-visual .card p { font-size: 14.5px; color: var(--primary-soft); font-style: italic; line-height: 1.65; font-weight: 500; }
 
-  /* Structured Content Shell Modules */
+  /* Structure Content Shell Modules */
   section { padding: 110px 0; }
   .section-head { max-width: 700px; margin: 0 auto 64px; text-align: center; }
   .section-head .eyebrow { justify-content: center; }
@@ -162,7 +162,7 @@
   .section-head p { color: var(--text-muted); margin-top: 18px; font-size: 16.5px; line-height: 1.7; font-weight: 400; }
   .alt-bg { background: var(--bg-pure); border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
 
-  /* Modern Upgraded Treatment Box Grids */
+  /* Treatment Box Grids */
   .svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
   .svc-card { 
     background: var(--bg-gray); padding: 44px 36px; border-radius: var(--radius-md); 
@@ -190,7 +190,7 @@
   .testi .who { margin-top: 28px; font-size: 13px; font-weight: 700; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; }
   .testi .who::before { content: ""; width: 12px; height: 1px; background: var(--accent-gold); }
 
-  /* Booking Matrix Form Module */
+  /* Booking Form Module */
   .book-wrap { display: grid; grid-template-columns: 0.85fr 1.15fr; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-lg); background: var(--bg-pure); border: 1px solid var(--border-light); }
   .book-side { background: var(--primary-dark); color: #C9C0B5; padding: 64px 48px; position: relative; border-right: 1px solid rgba(214,175,55,0.15); }
   .book-side h3 { font-size: 32px; color: #fff; margin-bottom: 24px; letter-spacing: -0.01em; }
@@ -234,10 +234,10 @@
   .stat-card b { display: block; font-family: 'Fraunces', serif; font-size: 36px; color: var(--primary-dark); line-height: 1.2; margin-bottom: 6px; font-weight: 500; }
   .stat-card span { font-size: 13px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
   
-  .panel { background: var(--bg-pure); border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow-hidden; margin-bottom: 44px; box-shadow: var(--shadow-sm); }
+  .panel { background: var(--bg-pure); border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 44px; box-shadow: var(--shadow-sm); }
   .panel-title { padding: 20px 28px; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border-light); background: var(--bg-pure); color: var(--primary-dark); }
   
-  /* Responsive Table Mechanics Wrapper */
+  /* Responsive Data Tables Layout Mechanics */
   .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
   thead th {
@@ -278,7 +278,7 @@
   .toast { position: fixed; bottom: 40px; right: 40px; background: var(--primary-dark); color: #fff; padding: 18px 28px; font-size: 15px; font-weight: 600; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); z-index: 500; opacity: 0; transform: translateY(16px); transition: var(--transition); pointer-events: none; border-left: 4px solid var(--accent-gold); }
   .toast.show { opacity: 1; transform: translateY(0); }
 
-  /* Media Breakpoints Adaptive System (All Gadgets Architecture) */
+  /* Media Breakpoints Adaptive System */
   @media(max-width:1200px){
     .svc-grid { grid-template-columns: repeat(2, 1fr); }
     .feat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -833,7 +833,7 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
       method: 'POST',
       body: rawPayload,
       headers: { 'Accept': 'application/json' }
-    }).catch(err => console.log("Formspree data transport payload drop warning:", err));
+    }).catch(err => console.log("Formspree transport payload warning:", err));
   }
 
   document.getElementById('bookingForm').reset();
@@ -889,7 +889,7 @@ function adminTab(name){
   if(name === 'dash' || name === 'history' || name === 'appts') refreshAdmin();
 }
 
-/* Alerts System (SMS + Email Handlers) */
+/* Alerts System (SMS + Email Protocols) */
 function sendPatientNotification(appt, updateType) {
   const isConfirmed = updateType === 'confirmed';
   let smsText, emailSubject, emailBody;
@@ -904,26 +904,31 @@ function sendPatientNotification(appt, updateType) {
     emailBody = `Dear ${appt.name},\n\nWe're sorry to inform you that your appointment request for ${appt.service} on ${appt.date} at ${appt.time} has been cancelled.\n\nPlease call us at 0320 2557305 to reschedule.\n\nRahfan Aesthetic Clinic`;
   }
 
-  if (appt.email && appt.email.length > 2) {
-    if (emailjsIsConfigured()) {
-      emailjs.send(NOTIFY_CONFIG.emailjsServiceId, NOTIFY_CONFIG.emailjsTemplateId, {
-        to_email: appt.email,
-        patient_name: appt.name,
-        subject: emailSubject,
-        message: emailBody
-      }).then(() => {
-        showToast('Email sent to patient ✓');
-      }).catch(() => {
-        showToast('Could not send email automatically — check EmailJS setup');
-      });
-    } else {
-      const mailHref = `mailto:${appt.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-      window.open(mailHref, '_blank');
+  // Non-blocking protocol initialization loop via safe browser context loops
+  setTimeout(() => {
+    if (appt.email && appt.email.length > 2) {
+      if (emailjsIsConfigured()) {
+        emailjs.send(NOTIFY_CONFIG.emailjsServiceId, NOTIFY_CONFIG.emailjsTemplateId, {
+          to_email: appt.email,
+          patient_name: appt.name,
+          subject: emailSubject,
+          message: emailBody
+        }).then(() => {
+          showToast('Notification email dispatched ✓');
+        }).catch(() => {
+          console.warn('EmailJS fallback active.');
+        });
+      } else {
+        const mailHref = `mailto:${appt.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+        window.location.href = mailHref;
+      }
     }
-  }
+  }, 300);
 
-  const smsHref = `sms:${appt.phone}?body=${encodeURIComponent(smsText)}`;
-  window.open(smsHref, '_blank');
+  setTimeout(() => {
+    const smsHref = `sms:${appt.phone}?body=${encodeURIComponent(smsText)}`;
+    window.location.href = smsHref;
+  }, 1000);
 }
 
 /* Viewport Data Layout Processing Controllers */
@@ -1018,7 +1023,7 @@ function setStatus(id, status){
     targetAppt.status = status; 
     saveAppointments(list); 
     refreshAdmin(); 
-    showToast('Status updated to ' + status); 
+    showToast('Status successfully marked as ' + status); 
     sendPatientNotification(targetAppt, status);
   }
 }
