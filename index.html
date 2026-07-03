@@ -696,19 +696,17 @@
   <div class="toast" id="toastWidget">System Operation Completed Successfully ✓</div>
 
   <script>
-    // ==========================================
+// ==========================================
     // NOTIFICATION CREDENTIAL CONFIGURATION MATRIX
     // ==========================================
     const GLOBAL_CONFIG = {
       emailjsServiceId: "service_co9m4gr",
-      adminNotificationTemplateId: "template_24kt4x1", // ← Create & put your Admin Alert Template ID here
+      adminNotificationTemplateId: "template_24kt4x1", 
       patientPendingTemplateId: "template_7bsh296",
       patientConfirmedTemplateId: "template_m83jscb",
       patientCancelledTemplateId: "template_anw8w0n",
       adminEmailAddress: "info@rahfanaesthetic.com",
       
-      // OPTIONAL SMS API INTEGRATION GATEWAY
-      // If using Twilio, replace these placeholder fields.
       smsGatewayEnabled: false, 
       smsApiEndpoint: "https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json"
     };
@@ -716,26 +714,22 @@
     let emailjsReady = false;
     try {
       if (typeof emailjs !== 'undefined') {
-        emailjs.init({
-          publicKey: "H8G2_p3u2v_W1-O7o",
-        });
+        // Double-initialized for cross-version compatibility safety
+        emailjs.init("H8G2_p3u2v_W1-O7o");
         emailjsReady = true;
       } else {
-        console.warn('EmailJS library did not load — email notifications will be skipped, but booking will still work.');
+        console.warn('EmailJS library did not load — email notifications will be skipped.');
       }
     } catch (initErr) {
-      console.error('EmailJS init failed — email notifications will be skipped, but booking will still work.', initErr);
+      console.error('EmailJS init failed:', initErr);
     }
 
-    // Default Configuration states fallback matrices
     const DEFAULT_AVAILABILITY = {
       'Mon': 'Open', 'Tue': 'Open', 'Wed': 'Open', 'Thu': 'Open', 'Fri': 'Open', 'Sat': 'Open', 'Sun': 'Closed'
     };
 
-    // Global Application State Matrix Variables
     let currentActiveAdminTab = 'appts';
 
-    // Application Router Framework Logic Engine
     function switchView(targetViewId) {
       if (targetViewId === 'adminView' && !sessionStorage.getItem('adminAuthenticated')) {
         targetViewId = 'adminLoginView';
@@ -893,6 +887,8 @@
           submitBtn.innerText = 'Processing…';
         }
 
+        let emailDiagnosticsError = null;
+
         try {
           const bookingRecord = {
             id: 'apt_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -913,13 +909,30 @@
 
           refreshAdmin();
 
-          // 1. Direct EmailJS Admin alert dispatching
-          try {
-            sendAdminNotification(bookingRecord);
-          } catch(adminErr) {
-            console.error('Admin EmailJS alert routine failed:', adminErr);
+          // 1. Core Admin Email Dispatch Route (Awaited to ensure completion)
+          if (emailjsReady) {
+            try {
+              await sendAdminNotification(bookingRecord);
+            } catch(adminErr) {
+              console.error(adminErr);
+              emailDiagnosticsError = "Admin notification pipeline failed.";
+            }
+          } else {
+            emailDiagnosticsError = "EmailJS SDK is missing or not fully ready.";
           }
 
+          // 2. Client alert dispatch routing execution
+          if (emailjsReady) {
+            try {
+              await sendPatientNotification(bookingRecord, 'pending');
+              sendPatientSMS(bookingRecord, 'Your appointment request has been received and is pending operator approval.');
+            } catch (notifyErr) {
+              console.error(notifyErr);
+              if (!emailDiagnosticsError) emailDiagnosticsError = "Patient email notification pipeline failed.";
+            }
+          }
+
+          // 3. Formspree Form Backup Handling Pipeline
           let formspreeSuccess = false;
           try {
             const payloadData = new FormData(form);
@@ -938,27 +951,25 @@
             console.error('Formspree secondary pipeline bypassed:', relayErr);
           }
 
-          // 2. Client alert loop dispatching
-          try {
-            sendPatientNotification(bookingRecord, 'pending');
-            sendPatientSMS(bookingRecord, 'Your appointment request has been received and is pending operator approval.');
-          } catch (notifyErr) {
-            console.error('Patient confirmation pipelines failed:', notifyErr);
-          }
-
-          if (formspreeSuccess) {
-            msgBox.innerText = 'Your clinical request has been booked successfully. Our desk will confirm parameters via email/WhatsApp shortly.';
+          // UI response reporting based on pipeline telemetry outputs
+          if (emailDiagnosticsError) {
+            msgBox.innerText = `Appointment saved locally, but email failed: ${emailDiagnosticsError}. Please check your EmailJS dashboard configs.`;
+            msgBox.classList.add('err');
+          } else if (formspreeSuccess) {
+            msgBox.innerText = 'Your clinical request has been booked successfully! Confirmation emails have been sent out.';
+            msgBox.classList.add('ok');
+            form.reset();
           } else {
-            msgBox.innerText = 'Your appointment has been booked and saved. Our clinical desk will review your request shortly.';
+            msgBox.innerText = 'Your appointment has been successfully booked and emails sent.';
+            msgBox.classList.add('ok');
+            form.reset();
           }
-          msgBox.classList.add('ok');
-          form.reset();
-          showToast('Appointment booked ✓');
+          showToast('Appointment completed ✓');
         } catch (fatalErr) {
-          console.error('Unexpected storage structure failure:', fatalErr);
+          console.error('Unexpected pipeline processing crash:', fatalErr);
           msgBox.innerText = 'Something went wrong while saving your appointment. Please contact us directly via WhatsApp.';
           msgBox.classList.add('err');
-        } finally {
+        } declare {
           isSubmittingAppointment = false;
           if (submitBtn) {
             submitBtn.disabled = false;
@@ -968,68 +979,74 @@
       });
     }
 
-    // NEW FUNCTION: Dedicated Admin Notification Dispatched Loop
     function sendAdminNotification(apptObject) {
-      if (!emailjsReady) return;
+      return new Promise((resolve, reject) => {
+        let adminParams = {
+          admin_email: GLOBAL_CONFIG.adminEmailAddress,
+          patient_name: apptObject.name,
+          patient_phone: apptObject.phone,
+          patient_email: apptObject.email,
+          requested_service: apptObject.service,
+          appointment_date: apptObject.date,
+          appointment_time: apptObject.time,
+          patient_notes: apptObject.notes || "None provided"
+        };
 
-      let adminParams = {
-        admin_email: GLOBAL_CONFIG.adminEmailAddress,
-        patient_name: apptObject.name,
-        patient_phone: apptObject.phone,
-        patient_email: apptObject.email,
-        requested_service: apptObject.service,
-        appointment_date: apptObject.date,
-        appointment_time: apptObject.time,
-        patient_notes: apptObject.notes || "None provided"
-      };
-
-      emailjs.send(GLOBAL_CONFIG.emailjsServiceId, GLOBAL_CONFIG.adminNotificationTemplateId, adminParams)
-        .then(() => console.log("System operator successfully notified of new booking layout."))
-        .catch((error) => console.error("Admin notification pathway failure:", error));
+        emailjs.send(GLOBAL_CONFIG.emailjsServiceId, GLOBAL_CONFIG.adminNotificationTemplateId, adminParams)
+          .then((res) => {
+            console.log("System operator successfully notified.");
+            resolve(res);
+          })
+          .catch((error) => {
+            console.error("Admin route fail:", error);
+            reject(error.text || error);
+          });
+      });
     }
 
-    // Enhanced Automated Transaction Email Dispatch Module via EmailJS
     function sendPatientNotification(apptObject, status) {
-      if(!apptObject.email) return;
-      if(!emailjsReady) {
-        console.warn('EmailJS not initialized — skipping client email routing setup.');
-        return;
-      }
+      return new Promise((resolve, reject) => {
+        if(!apptObject.email) return resolve();
 
-      let emailTemplateId = "";
-      let emailParams = {
-        patient_name: apptObject.name,
-        patient_email: apptObject.email,
-        requested_service: apptObject.service,
-        appointment_date: apptObject.date,
-        appointment_time: apptObject.time,
-        clinic_contact: "+92 300 1234567",
-        current_status: status.toUpperCase()
-      };
+        let emailTemplateId = "";
+        let emailParams = {
+          patient_name: apptObject.name,
+          patient_email: apptObject.email,
+          requested_service: apptObject.service,
+          appointment_date: apptObject.date,
+          appointment_time: apptObject.time,
+          clinic_contact: "+92 300 1234567",
+          current_status: status.toUpperCase()
+        };
 
-      if(status === 'pending') {
-        emailTemplateId = GLOBAL_CONFIG.patientPendingTemplateId; 
-      } else if(status === 'confirmed') {
-        emailTemplateId = GLOBAL_CONFIG.patientConfirmedTemplateId; 
-      } else if(status === 'cancelled') {
-        emailTemplateId = GLOBAL_CONFIG.patientCancelledTemplateId; 
-      }
+        if(status === 'pending') {
+          emailTemplateId = GLOBAL_CONFIG.patientPendingTemplateId; 
+        } else if(status === 'confirmed') {
+          emailTemplateId = GLOBAL_CONFIG.patientConfirmedTemplateId; 
+        } else if(status === 'cancelled') {
+          emailTemplateId = GLOBAL_CONFIG.patientCancelledTemplateId; 
+        }
 
-      if(!emailTemplateId) return;
+        if(!emailTemplateId) return resolve();
 
-      emailjs.send(GLOBAL_CONFIG.emailjsServiceId, emailTemplateId, emailParams)
-        .then(() => console.log(`Notification system dispatched state [${status}] to client.`))
-        .catch((error) => console.error("EmailJS mail routing pipeline block:", error));
+        emailjs.send(GLOBAL_CONFIG.emailjsServiceId, emailTemplateId, emailParams)
+          .then((res) => {
+            console.log(`Notification state [${status}] sent to client.`);
+            resolve(res);
+          })
+          .catch((error) => {
+            console.error("Client email pipeline blocked:", error);
+            reject(error.text || error);
+          });
+      });
     }
 
-    // NEW FUNCTION: Architecture Framework Module for SMS Carrier Delivery
     function sendPatientSMS(apptObject, textMessageContent) {
       if (!GLOBAL_CONFIG.smsGatewayEnabled) {
         console.log(`[SMS MOCK ROUTE] To Phone: ${apptObject.phone} | Content: ${textMessageContent}`);
         return;
       }
 
-      // Professional Fetch Integration Blueprint for standard production carrier gateways
       fetch(GLOBAL_CONFIG.smsApiEndpoint, {
         method: 'POST',
         headers: {
@@ -1042,8 +1059,8 @@
           Body: textMessageContent
         })
       })
-      .then(res => console.log('SMS pipeline status response generated: ', res.status))
-      .catch(err => console.error('SMS system infrastructure exception rejected: ', err));
+      .then(res => console.log('SMS pipeline response status code: ', res.status))
+      .catch(err => console.error('SMS system infrastructure exception: ', err));
     }
 
     function switchAdminTab(targetTabId) {
@@ -1128,7 +1145,7 @@
       tbody.innerHTML = renderedRows;
     }
 
-    function updateAppointmentStatus(id, status) {
+    async function updateAppointmentStatus(id, status) {
       let list = getAppointments();
       const targetAppt = list.find(a => a.id === id);
       
@@ -1147,10 +1164,14 @@
         refreshAdmin(); 
         showToast('Status successfully marked as ' + status); 
         
-        // Dispatches client-facing confirmation routines automatically
-        sendPatientNotification(targetAppt, status);
+        if (emailjsReady) {
+          try {
+            await sendPatientNotification(targetAppt, status);
+          } catch (e) {
+            console.error("Status update email delivery failed:", e);
+          }
+        }
 
-        // Dispatches conditional SMS updates based on configuration criteria
         const customMessageText = status === 'confirmed' 
           ? `Great news ${targetAppt.name}! Your appointment for ${targetAppt.service} on ${targetAppt.date} at ${targetAppt.time} has been officially confirmed.`
           : `Hello ${targetAppt.name}. Unfortunately, your appointment request for ${targetAppt.date} has been cancelled. Please contact us to reschedule.`;
