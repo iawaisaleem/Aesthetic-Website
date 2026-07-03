@@ -138,7 +138,7 @@
   .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
   .hero-stats { display: flex; gap: 48px; margin-top: 72px; border-top: 1px solid var(--border-light); padding-top: 36px; }
   .hero-stats div b { display: block; font-family: 'Fraunces', serif; font-size: 38px; color: var(--primary-dark); font-weight: 500; }
-  .hero-stats div span { font-size: 13px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.02em; }
+  .hero-stats div span { font-size: 13px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
   
   .hero-visual {
     aspect-ratio: 4/5; background: #EAECEF linear-gradient(135deg, #F6F0EA 0%, #E7DACB 100%);
@@ -237,27 +237,41 @@
   .panel { background: var(--bg-pure); border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 44px; box-shadow: var(--shadow-sm); }
   .panel-title { padding: 20px 28px; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border-light); background: var(--bg-pure); color: var(--primary-dark); }
   
-  /* Responsive Data Tables Layout Mechanics (FIXED FOR BUTTON VISIBILITY) */
+  /* Responsive Data Tables UI Architecture - STRUCTURAL BUG FIXED */
   .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; border-collapse: collapse; text-align: left; }
+  table { width: 100%; border-collapse: collapse; text-align: left; table-layout: auto; }
   thead th {
     font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted);
     padding: 18px 24px; border-bottom: 1px solid var(--border-light); background: #FAFBFB;
   }
-  tbody td { padding: 18px 24px; font-size: 14px; border-bottom: 1px solid var(--border-light); color: var(--primary-soft); vertical-align: middle; }
+  tbody td { 
+    padding: 18px 24px; 
+    font-size: 14px; 
+    border-bottom: 1px solid var(--border-light); 
+    color: var(--primary-soft); 
+    vertical-align: middle;
+    white-space: normal; /* Fixed: allows text wrapping inside columns to prevent action button overflow */
+    word-break: break-word;
+  }
   tbody tr:last-child td { border-bottom: none; }
   
   .badge { font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 50px; letter-spacing: .04em; text-transform: uppercase; display: inline-block; }
   .badge.pending { background: #FFF4E5; color: #B26A00; }
   .badge.confirmed { background: #E6F4EA; color: #137333; }
   .badge.cancelled { background: #FCE8E6; color: #C5221F; }
-  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   
-  .mini-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.02em; }
+  /* Protected Action Layout Framework */
+  .row-actions { 
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: nowrap; /* Ensures buttons remain cleanly grouped side by side */
+  }
+  
+  .mini-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.02em; transition: var(--transition); }
   .mini-btn.confirm { border-color: #137333; color: #137333; background: #FAFDFB; }
-  .mini-btn.confirm:hover { background: #E6F4EA; transform: scale(1.03); }
+  .mini-btn.confirm:hover { background: #E6F4EA; transform: translateY(-1px); }
   .mini-btn.cancel { border-color: #C5221F; color: #C5221F; background: #FFF9F9; }
-  .mini-btn.cancel:hover { background: #FCE8E6; transform: scale(1.03); }
+  .mini-btn.cancel:hover { background: #FCE8E6; transform: translateY(-1px); }
   .mini-btn.del { border-color: var(--text-muted); color: var(--text-muted); }
   .mini-btn.del:hover { background: var(--bg-gray); }
   
