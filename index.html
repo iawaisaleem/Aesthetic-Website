@@ -919,7 +919,6 @@ function sendPatientNotification(appt, updateType) {
           console.warn('EmailJS error:', err);
         });
       } else {
-        // Safe context injection using hidden non-disruptive iframe hooks
         const mailHref = `mailto:${appt.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
@@ -990,8 +989,8 @@ function refreshAdmin(){
         <td>${a.date} @ ${a.time}</td>
         <td><span class="badge ${a.status}">${a.status}</span></td>
         <td><div class="row-actions">
-          <button class="mini-btn confirm" onclick="setStatus('${a.id}','confirmed')">Confirm</button>
-          <button class="mini-btn cancel" onclick="setStatus('${a.id}','cancelled')">Cancel</button>
+          <button class="mini-btn confirm" onclick="setApptStatus('${a.id}','confirmed')">Confirm</button>
+          <button class="mini-btn cancel" onclick="setApptStatus('${a.id}','cancelled')">Cancel</button>
           <button class="mini-btn del" onclick="deleteAppt('${a.id}')">Delete</button>
         </div></td>
       </tr>
@@ -1019,7 +1018,7 @@ function escapeHtml(s){
 }
 
 /* The Fixed Status Core Engine */
-function setStatus(id, status){
+function setApptStatus(id, status){
   const list = getAppointments();
   const idx = list.findIndex(a => a.id === id);
   if(idx > -1){ 
@@ -1033,17 +1032,11 @@ function setStatus(id, status){
       }
     }
     
-    // 1. Mutate state inside RAM first
     targetAppt.status = status; 
-    
-    // 2. Commit transaction directly to local storage layout
     saveAppointments(list); 
-    
-    // 3. Complete structural UI rebuilding loops
     refreshAdmin(); 
     showToast('Status successfully marked as ' + status); 
     
-    // 4. Safely forward notification actions out of the current event loop execution frame
     sendPatientNotification(targetAppt, status);
   }
 }
