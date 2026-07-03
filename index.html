@@ -719,23 +719,22 @@
     };
 
     let emailjsReady = false;
+// Wrap initialization in a load event to ensure the library is ready
+window.addEventListener('load', function() {
     try {
-      if (typeof emailjs !== 'undefined') {
-        // FIX: @emailjs/browser v4 requires an options object, not a bare
-        // string. `emailjs.init("kV6ne6GvGBjdk1XRv")` looked like it worked
-        // (no error thrown) but never actually set the public key on the
-        // SDK, so every emailjs.send() call downstream was rejected by
-        // EmailJS's API for missing/invalid credentials — which is exactly
-        // why every admin and patient notification email was failing while
-        // the appointment itself still saved correctly.
-        emailjs.init({ publicKey: "puVovmqYxtotIuZv7" });
-        emailjsReady = true;
-      } else {
-        console.warn('EmailJS library did not load — email notifications will be skipped.');
-      }
+        if (typeof emailjs !== 'undefined') {
+            emailjs.init({
+                publicKey: "puVovmqYxtotIuZv7",
+            });
+            emailjsReady = true;
+            console.log("EmailJS Initialized Successfully.");
+        } else {
+            console.error('EmailJS SDK was not found on the page.');
+        }
     } catch (initErr) {
-      console.error('EmailJS init failed:', initErr);
+        console.error('EmailJS initialization failed:', initErr);
     }
+});
 
     const DEFAULT_AVAILABILITY = {
       'Mon': 'Open', 'Tue': 'Open', 'Wed': 'Open', 'Thu': 'Open', 'Fri': 'Open', 'Sat': 'Open', 'Sun': 'Closed'
