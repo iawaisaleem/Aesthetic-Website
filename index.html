@@ -217,7 +217,7 @@
 
   /* Admin Control Shell Architecture */
   .admin-shell { display: grid; grid-template-columns: 280px 1fr; min-height: 75vh; background: var(--bg-pure); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-light); box-shadow: var(--shadow-md); }
-  .admin-side { background: var(--primary-dark); color: #BCC3CC; padding: 44px 0; }
+  .admin-side { background: var(--primary-dark); color: #BCC3CC; padding: 44px 0; display: flex; flex-direction: column; justify-content: space-between; }
   .admin-side .a-title { padding: 0 32px 28px; font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-gold); border-bottom: 1px solid #252D35; margin-bottom: 24px; }
   .admin-side button.a-link {
     display: flex; align-items: center; gap: 14px; width: 100%; background: none; border: none; color: #BCC3CC;
@@ -250,7 +250,7 @@
     border-bottom: 1px solid var(--border-light); 
     color: var(--primary-soft); 
     vertical-align: middle;
-    white-space: normal; /* Fixed: allows text wrapping inside columns to prevent action button overflow */
+    white-space: normal;
     word-break: break-word;
   }
   tbody tr:last-child td { border-bottom: none; }
@@ -264,7 +264,7 @@
   .row-actions { 
     display: flex; 
     gap: 8px; 
-    flex-wrap: nowrap; /* Ensures buttons remain cleanly grouped side by side */
+    flex-wrap: nowrap;
   }
   
   .mini-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.02em; transition: var(--transition); }
@@ -278,10 +278,40 @@
   .empty-state { padding: 72px 24px; text-align: center; color: var(--text-muted); }
   .empty-state .glyph { font-family: 'Fraunces', serif; font-style: italic; font-size: 40px; color: var(--accent-gold); margin-bottom: 16px; }
 
-  .login-wrap { max-width: 420px; margin: 120px auto; background: var(--bg-pure); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 56px 44px; text-align: center; box-shadow: var(--shadow-lg); }
-  .login-wrap h2 { font-size: 28px; margin-bottom: 12px; }
-  .login-wrap p.hint { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; }
-  .login-wrap .field { text-align: left; }
+  /* Hidden Secure Authentication Card Layout */
+  .login-card {
+    max-width: 440px;
+    margin: 100px auto;
+    background: var(--bg-pure);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 56px 44px;
+    box-shadow: var(--shadow-lg);
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .login-card h2 {
+    font-size: 28px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .login-card p.hint {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+    text-align: center;
+  }
+  .login-err {
+    color: #691C12;
+    background: #FDF2F2;
+    border: 1px solid #F5C2BC;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+    display: none;
+    text-align: center;
+  }
 
   .availability-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; padding: 28px; }
   .day-card { border: 1px solid var(--border-light); padding: 20px 14px; text-align: center; border-radius: var(--radius-sm); background: var(--bg-gray); box-shadow: var(--shadow-sm); }
@@ -292,806 +322,803 @@
   .toast { position: fixed; bottom: 40px; right: 40px; background: var(--primary-dark); color: #fff; padding: 18px 28px; font-size: 15px; font-weight: 600; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); z-index: 500; opacity: 0; transform: translateY(16px); transition: var(--transition); pointer-events: none; border-left: 4px solid var(--accent-gold); }
   .toast.show { opacity: 1; transform: translateY(0); }
 
-  /* Media Breakpoints Adaptive System */
-  @media(max-width:1200px){
-    .svc-grid { grid-template-columns: repeat(2, 1fr); }
-    .feat-grid { grid-template-columns: repeat(2, 1fr); }
-    .hero h1 { font-size: 50px; }
-  }
-
-  @media(max-width:1024px){
-    section { padding: 80px 0; }
-    .hero-grid { grid-template-columns: 1fr; padding: 60px 0; gap: 48px; text-align: center; }
-    .hero h1 { max-width: 650px; margin: 0 auto; }
-    .hero p.lead { max-width: 600px; margin: 24px auto 36px; }
+  /* Media Breakpoints Adaptive Layouts */
+  @media(max-width: 1024px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; padding: 60px 0; text-align: center; }
+    .eyebrow { justify-content: center; }
+    .eyebrow::before { display: none; }
+    .hero p.lead { margin: 24px auto 36px; }
     .hero-actions { justify-content: center; }
     .hero-stats { justify-content: center; gap: 36px; }
-    .hero-visual { order: -1; max-width: 440px; margin: 0 auto; width: 100%; }
+    .svc-grid { grid-template-columns: repeat(2, 1fr); }
+    .feat-grid { grid-template-columns: repeat(2, 1fr); }
+    .testi-grid { grid-template-columns: 1fr; }
     .book-wrap { grid-template-columns: 1fr; }
-    .book-side { padding: 48px 36px; }
-    .book-form { padding: 48px 36px; }
     .admin-shell { grid-template-columns: 1fr; }
-    .admin-side { display: flex; overflow-x: auto; padding: 16px 14px; gap: 8px; border-bottom: 1px solid var(--border-light); }
-    .admin-side .a-title { display: none; }
-    .admin-side button.a-link { white-space: nowrap; border-left: none; border-bottom: 3.5px solid transparent; padding: 14px 22px; width: auto; }
-    .admin-side button.a-link.active { border-left-color: transparent; border-bottom-color: var(--accent-gold); background: none; }
-    .admin-main { padding: 36px 20px; }
+    .admin-side { padding: 24px 0; }
+    .admin-side .a-title { padding: 0 24px 16px; margin-bottom: 16px; }
+    .admin-side button.a-link { padding: 12px 24px; }
+    .admin-main { padding: 32px 24px; }
     .stat-row { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .availability-grid { grid-template-columns: repeat(4, 1fr); }
   }
-
-  @media(max-width:768px){
-    .nav .container { height: 80px; }
-    .brand-mark { width: 40px; height: 40px; font-size: 18px; }
-    .brand-name { font-size: 20px; }
-    nav.links { position: fixed; top: 80px; left: 0; right: 0; background: var(--bg-cream); flex-direction: column; align-items: flex-start; padding: 32px 24px; border-bottom: 1px solid var(--border-light); gap: 24px; transform: translateY(-160%); transition: var(--transition); z-index: 99; opacity: 0; pointer-events: none; }
-    nav.links.open { transform: translateY(0); opacity: 1; pointer-events: auto; box-shadow: var(--shadow-lg); }
+  @media(max-width: 768px) {
+    header.nav .container { height: 80px; }
+    nav.links { display: none; }
     .menu-toggle { display: block; }
-    .nav .desktop-cta { display: none; }
-    .hero h1 { font-size: 38px; }
-    .section-head h2 { font-size: 30px; }
-    .svc-grid, .testi-grid, .availability-grid { grid-template-columns: 1fr; gap: 20px; }
+    .hero h1 { font-size: 42px; }
+    .svc-grid { grid-template-columns: 1fr; }
+    .feat-grid { grid-template-columns: 1fr; }
+    .book-side { padding: 44px 28px; }
+    .book-form { padding: 44px 28px; }
     .field-row { grid-template-columns: 1fr; gap: 0; }
-    .topbar .tb-links { display: none; }
-    .topbar .container { justify-content: center; text-align: center; }
-    .foot-grid { grid-template-columns: 1fr; gap: 40px; }
+    .stat-row { grid-template-columns: 1fr; }
+    .availability-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
-  @media(max-width:480px) {
-    .hero-stats { gap: 20px; flex-wrap: wrap; }
-    .hero-stats div { flex: 1 1 40%; }
-    .stat-row { grid-template-columns: 1fr; }
-    .book-side, .book-form { padding: 36px 20px; }
+  /* Overlay Mobile Nav Drawer */
+  .mobile-drawer {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-cream); z-index: 200; padding: 40px 24px;
+    display: none; flex-direction: column; gap: 28px;
+    animation: fadeIn 0.3s ease;
   }
-  
-  /* Footer */
-  footer { background: var(--primary-dark); color: #A4ADB7; padding: 90px 0 44px; font-size: 14.5px; border-top: 4px solid var(--accent-gold); }
-  .foot-grid { display: grid; grid-template-columns: 1.4fr 0.9fr 0.9fr 1fr; gap: 50px; margin-bottom: 64px; }
-  footer h4 { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 26px; font-family: 'Plus Jakarta Sans', sans-serif; }
-  footer .brand-name { color: #fff; margin-bottom: 14px; }
-  footer p.about-line { line-height: 1.7; max-width: 320px; font-weight: 300; }
-  footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
-  footer ul a:hover { color: #fff; padding-left: 4px; }
-  .foot-bottom { border-top: 1px solid #242D35; padding-top: 32px; font-size: 13.5px; display: flex; justify-content: space-between; color: #6C757D; flex-wrap: wrap; gap: 16px; }
+  .mobile-drawer .close-drawer { align-self: flex-end; background: none; border: none; font-size: 32px; color: var(--primary-dark); }
+  .mobile-drawer a { font-size: 22px; font-weight: 600; color: var(--primary-dark); border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="container">
-    <div class="tb-links">
-      <a href="tel:03202557305">📞 0320 2557305</a>
-      <a href="mailto:awaisalee000@gmail.com">✉ awaisalee000@gmail.com</a>
-    </div>
-    <div>Mon – Sat · 11:00 AM – 8:00 PM, Gulberg, Lahore</div>
-  </div>
-</div>
-
-<header class="nav">
-  <div class="container">
-    <div class="brand">
-      <div class="brand-mark">R</div>
-      <div>
-        <div class="brand-name">Rahfan Aesthetic</div>
-        <div class="brand-sub">Skin &amp; Aesthetic Clinic</div>
+  <div class="topbar">
+    <div class="container">
+      <div>📍 14-C, Main Boulevard, Gulberg III, Lahore</div>
+      <div class="tb-links">
+        <a href="tel:+923001234567">📞 +92 300 1234567</a>
+        <a href="mailto:info@rahfanaesthetic.com">✉️ info@rahfanaesthetic.com</a>
       </div>
-    </div>
-    <nav class="links" id="navLinks">
-      <a href="#" data-page="home" class="nav-link active">Home</a>
-      <a href="#" data-page="about" class="nav-link">About</a>
-      <a href="#" data-page="services" class="nav-link">Services</a>
-      <a href="#" data-page="book" class="nav-link">Book Appointment</a>
-      <a href="#" data-page="admin" class="nav-link">Admin</a>
-    </nav>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <button class="cta-btn desktop-cta" onclick="showPage('book')">Book Appointment</button>
-      <button class="menu-toggle" id="menuToggle">☰</button>
     </div>
   </div>
-</header>
 
-<div class="page active" id="page-home">
-  <section class="hero">
-    <div class="container hero-grid">
-      <div>
-        <div class="eyebrow">Aesthetic Medicine · Lahore</div>
-        <h1>Skin care, <em>refined</em><br>by clinical precision.</h1>
-        <p class="lead">Rahfan Aesthetic blends expert medical dermatology with a bespoke, patient-centered experience—specializing in advanced acne correction, targeted laser protocols, and non-surgical anti-ageing treatments.</p>
-        <div class="hero-actions">
-          <button class="cta-btn" onclick="showPage('book')">Book an Appointment</button>
-          <a href="tel:03202557305"><button class="ghost-btn">Call Clinic</button></a>
-        </div>
-        <div class="hero-stats">
-          <div><b>12+</b><span>Years in Practice</span></div>
-          <div><b>4.9</b><span>Patient Rating</span></div>
-          <div><b>3,400+</b><span>Treatments Done</span></div>
+  <header class="nav">
+    <div class="container">
+      <div class="brand">
+        <div class="brand-mark">R</div>
+        <div>
+          <div class="brand-name">Rahfan Aesthetic</div>
+          <div class="brand-sub">Skin & Laser Clinic</div>
         </div>
       </div>
-      <div class="hero-visual">
-        <div class="card">
-          <div class="stars">★★★★★</div>
-          <p>"The most attentive aesthetic consultation I've had in Lahore — results matched exactly what was promised."</p>
+      <nav class="links">
+        <a href="#" class="nav-lnk active" data-target="homeView">Home</a>
+        <a href="#services" class="nav-lnk" data-target="homeView" onclick="setTimeout(()=>document.getElementById('services').scrollIntoView({behavior:'smooth'}),100)">Services</a>
+        <a href="#about" class="nav-lnk" data-target="homeView" onclick="setTimeout(()=>document.getElementById('about').scrollIntoView({behavior:'smooth'}),100)">About</a>
+        <button class="cta-btn" onclick="switchView('bookingView')">Book Appointment</button>
+      </nav>
+      <button class="menu-toggle" onclick="toggleMobileDrawer(true)">☰</button>
+    </div>
+  </header>
+
+  <div class="mobile-drawer" id="mobileDrawer">
+    <button class="close-drawer" onclick="toggleMobileDrawer(false)">✕</button>
+    <a href="#" onclick="toggleMobileDrawer(false); switchView('homeView')">Home</a>
+    <a href="#services" onclick="toggleMobileDrawer(false); switchView('homeView'); setTimeout(()=>document.getElementById('services').scrollIntoView({behavior:'smooth'}),300)">Services</a>
+    <a href="#about" onclick="toggleMobileDrawer(false); switchView('homeView'); setTimeout(()=>document.getElementById('about').scrollIntoView({behavior:'smooth'}),300)">About</a>
+    <button class="cta-btn" style="width:100%; margin-top:20px;" onclick="toggleMobileDrawer(false); switchView('bookingView')">Book Appointment</button>
+  </div>
+
+  <div id="homeView" class="page active">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">Premium Dermatological Care</div>
+          <h1>Reveal Your Natural, <em>Radiant Skin</em></h1>
+          <p class="lead">Lahore's premier clinic for advanced clinical aesthetics, offering tailored laser treatments, skincare science, and medical therapies handled by licensed experts.</p>
+          <div class="hero-actions">
+            <button class="cta-btn" onclick="switchView('bookingView')">Schedule Consultation</button>
+            <a href="#services" class="ghost-btn" style="display:inline-block; text-align:center;">Explore Services</a>
+          </div>
+          <div class="hero-stats">
+            <div><b>12+</b><span>Years Expertise</span></div>
+            <div><b>15k+</b><span>Happy Patients</span></div>
+            <div><b>99%</b><span>Satisfaction</span></div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="card">
+            <div class="stars">★★★★★</div>
+            <p>"The hydrafacial and laser toning treatments completely revived my skin's texture. Exceptional care and visible clinical improvements!"</p>
+            <div style="font-size:12px; font-weight:700; text-transform:uppercase; margin-top:14px; color:var(--primary-dark); letter-spacing:0.04em;">— Amna Khan, Lahore</div>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="alt-bg">
-    <div class="container">
-      <div class="section-head">
-        <div class="eyebrow">What we treat</div>
-        <h2>Signature Treatments</h2>
-        <p>A focused set of professional procedures, each performed personally, with transparent pricing and realistic expectations.</p>
-      </div>
-      <div class="svc-grid">
-        <div class="svc-card"><span class="svc-num">01</span><h3>Laser Hair Reduction</h3><p>Premium triple-wavelength Diode laser sessions tailored to skin archetype, optimized for safe, comfortable, and permanent hair reduction.</p><div class="price">From PKR 3,500 / session</div></div>
-        <div class="svc-card"><span class="svc-num">02</span><h3>Acne &amp; Scar Solution</h3><p>Customized chemical peels, medical microneedling, subcision, and fractional protocols for active breakouts and legacy structural scarring.</p><div class="price">From PKR 5,000 / session</div></div>
-        <div class="svc-card"><span class="svc-num">03</span><h3>Anti-Ageing &amp; Botox</h3><p>Precision fine-line smoothing, volume restoration, and preventative anti-ageing targeted molecular therapy.</p><div class="price">From PKR 15,000</div></div>
-        <div class="svc-card"><span class="svc-num">04</span><h3>Dermal Fillers &amp; Lips</h3><p>Advanced structural volume replenishment and precise contour optimization for natural-looking, beautiful definitions.</p><div class="price">From PKR 35,000</div></div>
-        <div class="svc-card"><span class="svc-num">05</span><h3>Laser Skin Toning</h3><p>Advanced Q-Switched Carbon Laser Peels targeting deep dermal hyperpigmentation, dynamic pore sizes, and uneven textures.</p><div class="price">From PKR 8,000 / session</div></div>
-        <div class="svc-card"><span class="svc-num">06</span><h3>Medical Hydrafacial</h3><p>Deep non-invasive multi-stage extraction, structural fluid mechanics, and pure targeted serum delivery for instant medical clarity.</p><div class="price">From PKR 7,000</div></div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="container">
-      <div class="section-head">
-        <div class="eyebrow">Why Rahfan Aesthetic</div>
-        <h2>Clinical Standards of Excellence</h2>
-      </div>
-      <div class="feat-grid">
-        <div class="feat"><div class="ic">✓</div><h3>Certified Physician</h3><p>Board-certified specialist with extensive practical training in advanced aesthetic protocols.</p></div>
-        <div class="feat"><div class="ic">⚙</div><h3>Modern Equipment</h3><p>FDA-approved premium device arrays maintained strictly to standard clinical safety thresholds.</p></div>
-        <div class="feat"><div class="ic">⏱</div><h3>On-Time Scheduling</h3><p>Appointments run precisely as scheduled — your selected slot is fully respected, every visit.</p></div>
-        <div class="feat"><div class="ic">🔒</div><h3>Private &amp; Confidential</h3><p>Discreet treatment environments alongside structured, confidential electronic health history records.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="alt-bg">
-    <div class="container">
-      <div class="section-head">
-        <div class="eyebrow">Patient Stories</div>
-        <h2>Verified Reviews</h2>
-      </div>
-      <div class="testi-grid">
-        <div class="testi"><div class="stars">★★★★★</div><p>Booked online in two minutes and got a confirmation call the same day. The clinic environment feels incredibly calm, private, and professional.</p><div class="who">— Ayesha K.</div></div>
-        <div class="testi"><div class="stars">★★★★★</div><p>My persistent acne scars have visibly faded after just three planned clinical sessions. The doctor explains every scientific step before applying treatment.</p><div class="who">— Hassan R.</div></div>
-        <div class="testi"><div class="stars">★★★★★</div><p>Hands down the best laser hair removal experience in Lahore — immaculate clinic spaces, helpful staff, and undeniable visible results.</p><div class="who">— Mariam S.</div></div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<div class="page" id="page-about">
-  <section>
-    <div class="container about-grid" style="display:grid; grid-template-columns: 0.85fr 1.15fr; gap:60px; align-items:center;">
-      <div class="hero-visual" style="aspect-ratio:3/4;">
-        <div class="card" style="position:absolute; bottom:0; width:calc(100% - 48px); background:rgba(255,255,255,0.95);">
-          <p style="font-weight:600; color:var(--primary-dark); font-style:normal;">Dr. Rahfan</p>
-          <span style="font-size:12px; color:var(--text-muted);">Lead Aesthetic Physician</span>
+    <section id="services" class="alt-bg">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Our Clinical Portfolio</div>
+          <h2>Signature Aesthetic Treatments</h2>
+          <p>Expertly formulated skincare therapies combining the latest medical innovations with rigorous aesthetic principles to restore vitality safely.</p>
+        </div>
+        <div class="svc-grid">
+          <div class="svc-card">
+            <div>
+              <span class="svc-num">01 / Laser Skin Resurfacing</span>
+              <h3>Carbon Laser Peel & Toning</h3>
+              <p>Advanced laser energy clearings targeting deep pores, pigmentation irregularities, acne scars, and uneven skin textures with absolute precision.</p>
+            </div>
+            <div class="price"><span>Session Price</span> <span>PKR 12,000</span></div>
+          </div>
+          <div class="svc-card">
+            <div>
+              <span class="svc-num">02 / Medical Skincare</span>
+              <h3>Premium HydraFacial MD</h3>
+              <p>Multi-step clinical resurfacing combining vacuum extractions, deep pore exfoliations, and customized antioxidant hydration fusions.</p>
+            </div>
+            <div class="price"><span>Session Price</span> <span>PKR 8,500</span></div>
+          </div>
+          <div class="svc-card">
+            <div>
+              <span class="svc-num">03 / Anti-Aging Science</span>
+              <h3>PRP Therapy & Microneedling</h3>
+              <p>Harnessing your body's natural growth factors alongside precision microneedling matrices to stimulate high-density collagen remodeling.</p>
+            </div>
+            <div class="price"><span>Session Price</span> <span>PKR 15,000</span></div>
+          </div>
         </div>
       </div>
-      <div class="about-text">
-        <div class="eyebrow">About the clinic</div>
-        <h2>Evidence-Based Aesthetic Medicine</h2>
-        <p style="margin-bottom: 20px; line-height: 1.7;">Rahfan Aesthetic was established to pioneer an honest, medical-first model of cosmetic dermatology within Lahore. Every treatment begins with an honest consultation focused on realistic results, with no unnecessary upselling.</p>
-        <p style="margin-bottom: 30px; line-height: 1.7;">We manage our schedule carefully to avoid overcrowding, so every patient receives dedicated attention and quality care.</p>
-        <ul style="list-style:none; display:grid; gap:14px; font-size:15px; font-weight:500;">
-          <li>✨ MBBS — King Edward Medical University</li>
-          <li>✨ Diploma in Advanced Aesthetic Medicine</li>
-          <li>✨ Active Member, Pakistan Association of Cosmetic Physicians</li>
-          <li>✨ 12+ Years of Verified Clinical Experience</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-</div>
+    </section>
 
-<div class="page" id="page-services">
-  <section>
-    <div class="container">
-      <div class="section-head">
-        <div class="eyebrow">Full Treatment Menu</div>
-        <h2>Services &amp; Standard Pricing</h2>
-        <p>Prices shown are starting estimates. Your exact cost will be confirmed during your consultation.</p>
+    <section id="about">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Why Rahfan Aesthetic</div>
+          <h2>The Standards of Medical Aesthetics</h2>
+          <p>Our operation prioritizes medical transparency, absolute sterile parameters, and highly evidence-based cosmetic dermatology setups.</p>
+        </div>
+        <div class="feat-grid">
+          <div class="feat">
+            <div class="ic">🩺</div>
+            <h3>Certified Specialists</h3>
+            <p>Every dynamic diagnostic and therapy session is executed by qualified clinical practitioners.</p>
+          </div>
+          <div class="feat">
+            <div class="ic">✨</div>
+            <h3>FDA-Approved Gear</h3>
+            <p>We leverage industry-leading laser rigs and clinically validated topical formulas exclusively.</p>
+          </div>
+          <div class="feat">
+            <div class="ic">🛡️</div>
+            <h3>Sterile Assurance</h3>
+            <p>Rigorous, medical-grade sanitization protocols for absolute safety constraints.</p>
+          </div>
+          <div class="feat">
+            <div class="ic">🤝</div>
+            <h3>Bespoke Procedures</h3>
+            <p>No generic protocols. Every routine is formulated directly to fit your exact skin parameters.</p>
+          </div>
+        </div>
       </div>
-      <div class="svc-grid">
-        <div class="svc-card"><span class="svc-num">01</span><h3>Laser Hair Reduction</h3><p>Premium Diode configurations for targeted regions or full anatomy treatment.</p><div class="price">PKR 3,500 – 18,000</div></div>
-        <div class="svc-card"><span class="svc-num">02</span><h3>Acne &amp; Scar Solution</h3><p>Chemical skin resurfacing, microneedling, and scar subcision.</p><div class="price">PKR 5,000 – 20,000</div></div>
-        <div class="svc-card"><span class="svc-num">03</span><h3>Botox &amp; Dermal Fillers</h3><p>Targeted muscle relaxation and precise volume restoration for natural-looking results.</p><div class="price">PKR 15,000 – 60,000</div></div>
-        <div class="svc-card"><span class="svc-num">04</span><h3>Chemical Resurfacing Peels</h3><p>Glycolic, Salicylic, and custom-blended medical TCA applications for hyperpigmentation.</p><div class="price">PKR 4,000 – 9,000</div></div>
-        <div class="svc-card"><span class="svc-num">05</span><h3>Medical Hydrafacial</h3><p>Mechanical cellular extraction, deep fluid suction, and pure serum hydration delivery.</p><div class="price">PKR 7,000 – 12,000</div></div>
-        <div class="svc-card"><span class="svc-num">06</span><h3>PRP Follicular Therapy</h3><p>Centrifuged autologous platelet-rich plasma treatments engineered to counteract thinning trends.</p><div class="price">PKR 12,000 – 25,000</div></div>
-        <div class="svc-card"><span class="svc-num">07</span><h3>Laser Skin Toning (Carbon Peel)</h3><p>Advanced Q-switched laser execution targeting texture issues and deep stubborn dark spot clusters.</p><div class="price">PKR 8,000 – 15,000</div></div>
-        <div class="svc-card"><span class="svc-num">08</span><h3>MesoGlow &amp; Vitamin Therapy</h3><p>Dermal mesotherapy micro-infusions providing explicit brightness and intense metabolic structural skin tone improvements.</p><div class="price">PKR 10,000 – 20,000</div></div>
-        <div class="svc-card"><span class="svc-num">09</span><h3>Microneedling with PRP</h3><p>Combined deep mechanical collagen restructuring maps matrixed with isolated concentrated personal plasma maps.</p><div class="price">PKR 15,000 – 28,000</div></div>
-      </div>
-    </div>
-  </section>
-</div>
+    </section>
 
-<div class="page" id="page-book">
-  <section>
-    <div class="container">
-      <div class="section-head">
-        <div class="eyebrow">Scheduling System</div>
-        <h2>Book a Clinical Consultation</h2>
-        <p>Fill in your details below and our clinic team will contact you shortly to confirm your appointment.</p>
+    <section class="alt-bg">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Client Feedback</div>
+          <h2>Verified Treatment Outcomes</h2>
+        </div>
+        <div class="testi-grid">
+          <div class="testi">
+            <div class="stars">★★★★★</div>
+            <p>"The clinic standard is pristine. I completed three sessions of PRP therapy and the structural results are absolutely undeniable."</p>
+            <div class="who">Zainab Malik</div>
+          </div>
+          <div class="testi">
+            <div class="stars">★★★★★</div>
+            <p>"Very systematic booking flow and completely transparent consultation timelines. The carbon peel treatment yields zero downtime!"</p>
+            <div class="who">Hamza Ahmed</div>
+          </div>
+          <div class="testi">
+            <div class="stars">★★★★★</div>
+            <p>"Highly professional dermatological advice. They explicitly analyze underlying causes instead of pushing unnecessary product lines."</p>
+            <div class="who">Dr. Fatima Rizvi</div>
+          </div>
+        </div>
       </div>
+    </section>
+  </div>
+
+  <div id="bookingView" class="page">
+    <section class="container">
       <div class="book-wrap">
         <div class="book-side">
-          <h3>Rahfan Aesthetic</h3>
-          <p>Share your contact details and our team will reach out shortly to confirm your appointment.</p>
-          <div class="info-row">📞<div><b>Call Us</b><a href="tel:03202557305" style="color:#fff; font-weight:600;">0320 2557305</a></div></div>
-          <div class="info-row">✉<div><b>Email Us</b><a href="mailto:awaisalee000@gmail.com" style="color:#fff; font-weight:600;">awaisalee000@gmail.com</a></div></div>
-          <div class="info-row">🕐<div><b>Working Hours</b>Mon – Sat, 11:00 AM – 8:00 PM</div></div>
-          <div class="info-row">📍<div><b>Location</b>Gulberg, Lahore, Pakistan</div></div>
+          <h3>Schedule Your Session</h3>
+          <p>Fill out our digital intake layout setup. Our scheduling desk review loops will evaluate availability mappings and send a confirmation shortly.</p>
+          <div class="info-row">
+            <div>
+              <b>Direct Helpline</b>
+              <span style="color:#fff; font-size:16px; font-weight:600;">+92 300 1234567</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div>
+              <b>Clinical Timings</b>
+              <span>Mon — Sat (12:00 PM — 08:00 PM)<br><strong style="color:var(--accent-gold);">Sunday Closed</strong></span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div>
+              <b>Clinical Policies</b>
+              <span>Please submit requests at least 24 hours in advance to secure optimal schedules.</span>
+            </div>
+          </div>
         </div>
-        <form class="book-form" id="bookingForm">
-          <div class="field-row">
-            <div class="field"><label>Patient Full Name</label><input type="text" id="bk-name" required placeholder="John Doe"></div>
-            <div class="field"><label>Phone Number</label><input type="tel" id="bk-phone" required placeholder="03201234567"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Email Address (Optional)</label><input type="email" id="bk-email" placeholder="patient@domain.com"></div>
-            <div class="field"><label>Select Treatment Matrix</label>
-              <select id="bk-service" required>
-                <option value="">Choose a specialized service</option>
-                <option>Laser Hair Reduction</option>
-                <option>Acne &amp; Scar Treatment</option>
-                <option>Botox Anti-Ageing Therapy</option>
-                <option>Dermal Fillers &amp; Lip Augmentation</option>
-                <option>Laser Skin Toning (Carbon Laser Peel)</option>
-                <option>Medical Hydrafacial &amp; Deep Extraction</option>
-                <option>Chemical Resurfacing Peels</option>
-                <option>PRP Hair Loss Follicular Therapy</option>
-                <option>Microneedling with PRP Matrix</option>
-                <option>MesoGlow &amp; Dermal Vitamin Therapy</option>
-                <option>General Medical Dermatology Consultation</option>
+        
+        <div class="book-form">
+          <form id="appointmentForm" action="https://formspree.io/f/mqakpjed" method="POST">
+            <div class="field">
+              <label>Full Patient Name</label>
+              <input type="text" name="PatientName" id="pName" placeholder="e.g., Ayesha Ali" required>
+            </div>
+            <div class="field">
+              <label>WhatsApp / Mobile Number</label>
+              <input type="tel" name="ContactNumber" id="pPhone" placeholder="e.g., 03001234567" required>
+            </div>
+            <div class="field">
+              <label>Email Address</label>
+              <input type="email" name="EmailAddress" id="pEmail" placeholder="e.g., ayesha@example.com" required>
+            </div>
+            <div class="field">
+              <label>Target Clinical Procedure</label>
+              <select name="RequestedService" id="pService" required>
+                <option value="">-- Choose a Procedure Portfolio --</option>
+                <option value="Carbon Laser Peel & Toning">Carbon Laser Peel & Toning (PKR 12,000)</option>
+                <option value="Premium HydraFacial MD">Premium HydraFacial MD (PKR 8,500)</option>
+                <option value="PRP Therapy & Microneedling">PRP Therapy & Microneedling (PKR 15,000)</option>
+                <option value="General Skincare Consultation">General Skincare Consultation (PKR 2,000)</option>
               </select>
             </div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Preferred Date</label><input type="date" id="bk-date" required></div>
-            <div class="field"><label>Preferred Time</label>
-              <select id="bk-time" required>
-                <option value="">Select a time</option>
-                <option>11:00 AM</option><option>12:00 PM</option><option>1:00 PM</option>
-                <option>2:00 PM</option><option>3:00 PM</option><option>4:00 PM</option>
-                <option>5:00 PM</option><option>6:00 PM</option><option>7:00 PM</option>
-              </select>
+            <div class="field-row">
+              <div class="field">
+                <label>Preferred Date</label>
+                <input type="date" name="AppointmentDate" id="pDate" required>
+              </div>
+              <div class="field">
+                <label>Preferred Slot</label>
+                <select name="PreferredTimeSlot" id="pTime" required>
+                  <option value="">-- Choose Slot --</option>
+                  <option value="12:00 PM - 02:00 PM">12:00 PM - 02:00 PM</option>
+                  <option value="02:00 PM - 04:00 PM">02:00 PM - 04:00 PM</option>
+                  <option value="04:00 PM - 06:00 PM">04:00 PM - 06:00 PM</option>
+                  <option value="06:00 PM - 08:00 PM">06:00 PM - 08:00 PM</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="field"><label>Additional Notes (Optional)</label><textarea id="bk-notes" rows="3" placeholder="Tell us about any skin concerns or medical history..."></textarea></div>
-          <button type="submit" class="submit-btn">Book Appointment</button>
-          <div class="form-msg" id="bookMsg"></div>
-        </form>
+            <div class="field">
+              <label>Patient Notes / History (Optional)</label>
+              <textarea name="PatientNotes" id="pNotes" rows="3" placeholder="Mention any skin allergies, continuous medication lines, or ongoing concerns..."></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Transmit Appointment Request</button>
+            <div class="form-msg" id="formMsg"></div>
+          </form>
+        </div>
       </div>
-    </div>
-  </section>
-</div>
+    </section>
+  </div>
 
-<div class="page" id="page-admin">
-  <section class="container">
-    
-    <div id="adminLogin">
-      <div class="login-wrap">
-        <h2>Clinic Admin Sign In</h2>
-        <p class="hint">Sign in to manage appointments and clinic availability.</p>
-        <div class="field"><label>Username</label><input type="text" id="ad-user" value="admin"></div>
-        <div class="field"><label>Password</label><input type="password" id="ad-pass" value="rahfan123"></div>
-        <button class="cta-btn" style="width:100%; margin-top:10px;" onclick="adminLogin()">Sign In</button>
-        <div class="form-msg" id="loginMsg"></div>
+  <div id="adminLoginView" class="page">
+    <section class="container">
+      <div class="login-card">
+        <h2>Secure Operator Portal</h2>
+        <p class="hint">Please provide valid authentication tokens to reveal the admin management panel grid.</p>
+        <div class="login-err" id="loginErrField">Invalid username or password.</div>
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPass" placeholder="Enter password" autocomplete="off">
+        </div>
+        <button class="submit-btn" onclick="executeAdminLogin()">Authenticate System</button>
       </div>
-    </div>
+    </section>
+  </div>
 
-    <div id="adminPanel" style="display:none;">
+  <div id="adminView" class="page">
+    <section class="container" style="padding: 40px 0 110px;">
       <div class="admin-shell">
-        <aside class="admin-side">
-          <div class="a-title">Rahfan Ops Center</div>
-          <button class="a-link active" data-tab="dash" onclick="adminTab('dash')">📊 Overview Dashboard</button>
-          <button class="a-link" data-tab="appts" onclick="adminTab('appts')">📅 Active Request Logs</button>
-          <button class="a-link" data-tab="history" onclick="adminTab('history')">📜 History</button>
-          <button class="a-link" data-tab="avail" onclick="adminTab('avail')">🕐 Shift Availability</button>
-          <button class="a-link" onclick="adminLogout()" style="margin-top:40px; border-top: 1px solid #252D35;">⎋ Log Out</button>
-        </aside>
-        <main class="admin-main">
-
-          <div id="tab-dash">
-            <div class="admin-head"><h2>Dashboard Overview</h2></div>
+        <div class="admin-side">
+          <div>
+            <div class="a-title">Operational Workspace</div>
+            <button class="a-link active" id="btnTabAppts" onclick="switchAdminTab('appts')">📅 Bookings Overview</button>
+            <button class="a-link" id="btnTabAvail" onclick="switchAdminTab('avail')">⚙️ Availability Mappings</button>
+          </div>
+          <div style="padding: 0 24px; margin-top: auto;">
+            <button class="mini-btn cancel" style="width:100%; padding:14px; text-align:center; font-weight:700;" onclick="executeAdminLogout()">🔒 Close Session</button>
+          </div>
+        </div>
+        
+        <div class="admin-main">
+          <div id="tabAppts">
+            <div class="admin-head">
+              <h2>Bookings Matrix</h2>
+              <button class="ghost-btn" style="padding:10px 20px; font-size:13px;" onclick="clearAllAppointmentsMockData()">Clear Cached Logs</button>
+            </div>
+            
             <div class="stat-row">
-              <div class="stat-card"><b id="st-total">0</b><span>Total Bookings</span></div>
-              <div class="stat-card"><b id="st-pending">0</b><span>Pending</span></div>
-              <div class="stat-card"><b id="st-confirmed">0</b><span>Confirmed</span></div>
-              <div class="stat-card"><b id="st-today">0</b><span>Scheduled Today</span></div>
+              <div class="stat-card"><b id="statTotal">0</b><span>Total Requests</span></div>
+              <div class="stat-card"><b id="statPending" style="color:#B26A00;">0</b><span>Pending Desk</span></div>
+              <div class="stat-card"><b id="statConfirmed" style="color:#137333;">0</b><span>Confirmed</span></div>
+              <div class="stat-card"><b id="statCancelled" style="color:#C5221F;">0</b><span>Cancelled</span></div>
             </div>
             
             <div class="panel">
-              <div class="panel-title">📅 Today's Appointments</div>
+              <div class="panel-title">Active Booking Queue</div>
               <div class="table-responsive">
                 <table>
-                  <thead><tr><th>Patient Name</th><th>Treatment</th><th>Time Window</th><th>Status</th></tr></thead>
-                  <tbody id="todayBookingsBody"></tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="panel">
-              <div class="panel-title">✨ Recent Activity</div>
-              <div class="table-responsive">
-                <table>
-                  <thead><tr><th>Patient</th><th>Service</th><th>Date &amp; Time</th><th>Status</th></tr></thead>
-                  <tbody id="recentBody"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <div id="tab-appts" style="display:none;">
-            <div class="admin-head"><h2>Appointment Requests</h2><button class="mini-btn" onclick="refreshAdmin()">↻ Refresh</button></div>
-            <div class="panel">
-              <div class="table-responsive">
-                <table>
-                  <thead><tr><th>Patient</th><th>Contact</th><th>Service</th><th>Date &amp; Time</th><th>Status</th><th>Actions</th></tr></thead>
-                  <tbody id="apptBody"></tbody>
+                  <thead>
+                    <tr>
+                      <th>Patient Details</th>
+                      <th>Requested Procedure</th>
+                      <th>Schedule Slot</th>
+                      <th>Status Badge</th>
+                      <th style="text-align:right;">Control Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="apptsTableBody">
+                    </tbody>
                 </table>
               </div>
             </div>
           </div>
-
-          <div id="tab-history" style="display:none;">
-            <div class="admin-head"><h2>Confirmed Appointment History</h2></div>
+          
+          <div id="tabAvail" style="display:none;">
+            <div class="admin-head">
+              <h2>Weekly Availability Configurations</h2>
+              <button class="cta-btn" style="padding:12px 24px; font-size:14px;" onclick="saveAvailability()">Apply Grid Modifications</button>
+            </div>
+            <p style="color:var(--text-muted); margin-bottom:32px; font-size:15px; font-weight:400;">Set operational business modes for each day. Days flagged as 'Closed' will prevent patient booking selections instantly.</p>
+            
             <div class="panel">
-              <div class="table-responsive">
-                <table>
-                  <thead><tr><th>Patient</th><th>Contact</th><th>Treatment</th><th>Date &amp; Time</th><th>Status</th></tr></thead>
-                  <tbody id="historyBody"></tbody>
-                </table>
-              </div>
+              <div class="panel-title">Clinic Weekly Map</div>
+              <div class="availability-grid" id="availGrid">
+                </div>
             </div>
           </div>
-
-          <div id="tab-avail" style="display:none;">
-            <div class="admin-head"><h2>Weekly Availability</h2><button class="cta-btn" onclick="saveAvailability()">Save Changes</button></div>
-            <div class="panel">
-              <div class="availability-grid" id="availGrid"></div>
-            </div>
-          </div>
-
-        </main>
+          
+        </div>
       </div>
-    </div>
-  </section>
-</div>
-
-<footer>
-  <div class="container">
-    <div class="foot-grid">
-      <div>
-        <div class="brand-name display-font" style="font-size:26px;">Rahfan Aesthetic</div>
-        <p class="about-line">A premium aesthetic medicine and cosmetic skin clinic in Gulberg, Lahore. Designed entirely around objective consultations, medical evidence, and top-tier clinical care paths.</p>
-      </div>
-      <div>
-        <h4>Explore Portals</h4>
-        <ul>
-          <li><a href="#" onclick="showPage('home')">Home Hub</a></li>
-          <li><a href="#" onclick="showPage('about')">Clinical About Profile</a></li>
-          <li><a href="#" onclick="showPage('services')">Treatment Capabilities</a></li>
-          <li><a href="#" onclick="showPage('book')">Appointment Gateway</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Our Treatments</h4>
-        <ul>
-          <li><a href="#" onclick="showPage('services')">Laser Hair Elimination</a></li>
-          <li><a href="#" onclick="showPage('services')">Botox &amp; Volumetric Fillers</a></li>
-          <li><a href="#" onclick="showPage('services')">Advanced Medical Hydrafacial</a></li>
-          <li><a href="#" onclick="showPage('services')">PRP Follicle Stimulation</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Direct Coordinates</h4>
-        <ul>
-          <li><a href="tel:03202557305">📞 0320 2557305</a></li>
-          <li><a href="mailto:awaisalee000@gmail.com">✉ awaisalee000@gmail.com</a></li>
-          <li>📍 Gulberg, Lahore, Pakistan</li>
-        </ul>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      <span>© 2026 Rahfan Aesthetic Clinic. All rights reserved.</span>
-      <span>Designed for personalized, evidence-based skin care.</span>
-    </div>
+    </section>
   </div>
-</footer>
 
-<div class="toast" id="toast"></div>
+  <div class="toast" id="toastWidget">System Operation Completed Successfully ✓</div>
 
-<script>
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/maqglyjw';
+  <script>
+    // Initialize secure communication keys via EmailJS library framework
+    (function(){
+      emailjs.init({
+        publicKey: "H8G2_p3u2v_W1-O7o", 
+      });
+    })();
 
-const NOTIFY_CONFIG = {
-  emailjsPublicKey:  'kV6ne6GvGBjdk1XRv',
-  emailjsServiceId:  'service_w4jkb4i',
-  emailjsTemplateId: 'template_jgrhjwv'
-};
+    // Default Configuration states fallback matrices
+    const DEFAULT_AVAILABILITY = {
+      'Mon': 'Open', 'Tue': 'Open', 'Wed': 'Open', 'Thu': 'Open', 'Fri': 'Open', 'Sat': 'Open', 'Sun': 'Closed'
+    };
 
-function emailjsIsConfigured(){
-  return window.emailjs &&
-    NOTIFY_CONFIG.emailjsPublicKey && !NOTIFY_CONFIG.emailjsPublicKey.startsWith('YOUR_') &&
-    NOTIFY_CONFIG.emailjsServiceId && !NOTIFY_CONFIG.emailjsServiceId.startsWith('YOUR_') &&
-    NOTIFY_CONFIG.emailjsTemplateId && !NOTIFY_CONFIG.emailjsTemplateId.startsWith('YOUR_');
-}
-if (emailjsIsConfigured()) {
-  emailjs.init(NOTIFY_CONFIG.emailjsPublicKey);
-}
+    // Global Application State Matrix Variables
+    let currentActiveAdminTab = 'appts';
 
-/* Navigation Engine */
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const targetPage = document.getElementById('page-' + id);
-  if (targetPage) targetPage.classList.add('active');
-  
-  document.querySelectorAll('.nav-link').forEach(a => a.classList.toggle('active', a.dataset.page === id));
-  document.getElementById('navLinks').classList.remove('open');
-  window.scrollTo({top: 0, behavior: 'smooth'});
-  if(id === 'admin') renderAdminIfLoggedIn();
-}
+    // Application Router Framework Logic Engine
+    function switchView(targetViewId) {
+      // Security Intercept Guard: Ensure admin dashboard cannot be accessed without an active login token
+      if (targetViewId === 'adminView' && !sessionStorage.getItem('adminAuthenticated')) {
+        targetViewId = 'adminLoginView';
+      }
 
-document.querySelectorAll('.nav-link').forEach(a => {
-  a.addEventListener('click', e => { 
-    e.preventDefault(); 
-    showPage(a.dataset.page); 
-  });
-});
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const activePage = document.getElementById(targetViewId);
+      if(activePage) {
+        activePage.classList.add('active');
+        window.scrollTo({top:0, behavior:'smooth'});
+      }
+      
+      // Reflect UI header synchronization metrics
+      document.querySelectorAll('.nav-lnk').forEach(lnk => {
+        if(lnk.getAttribute('data-target') === targetViewId) {
+          lnk.classList.add('active');
+        } else {
+          lnk.classList.remove('active');
+        }
+      });
 
-document.getElementById('menuToggle').addEventListener('click', () => {
-  document.getElementById('navLinks').classList.toggle('open');
-});
-
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg; 
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-function getAppointments(){
-  try {
-    const rawData = localStorage.getItem('rahfan_appointments');
-    return rawData ? JSON.parse(rawData) : [];
-  } catch(e) { 
-    console.error("Error reading appointments:", e);
-    return []; 
-  }
-}
-
-function saveAppointments(list){
-  try { 
-    localStorage.setItem('rahfan_appointments', JSON.stringify(list)); 
-  } catch(e) {
-    console.error("Error saving appointments:", e);
-  }
-}
-
-function getAvailability(){
-  try {
-    const rawData = localStorage.getItem('rahfan_availability');
-    return rawData ? JSON.parse(rawData) : defaultAvailability();
-  } catch(e) { 
-    return defaultAvailability(); 
-  }
-}
-
-function defaultAvailability(){
-  return {Mon:"Open",Tue:"Open",Wed:"Open",Thu:"Open",Fri:"Open",Sat:"Open",Sun:"Closed"};
-}
-
-/* Booking Request Handler */
-document.getElementById('bookingForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const msg = document.getElementById('bookMsg');
-  
-  const chosenDateVal = document.getElementById('bk-date').value;
-  const chosenTimeVal = document.getElementById('bk-time').value;
-  
-  const dateObj = new Date(chosenDateVal);
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const chosenDayName = daysOfWeek[dateObj.getDay()];
-  
-  const availability = getAvailability();
-  if (availability[chosenDayName] === 'Closed') {
-    msg.className = 'form-msg err';
-    msg.textContent = `The clinic is closed on ${chosenDayName}s. Please choose a different day.`;
-    return;
-  }
-
-  const list = getAppointments();
-  const isTimeSlotTaken = list.some(appt => appt.date === chosenDateVal && appt.time === chosenTimeVal && appt.status === 'confirmed');
-  if (isTimeSlotTaken) {
-    msg.className = 'form-msg err';
-    msg.textContent = `The time slot (${chosenTimeVal} on ${chosenDateVal}) is already booked. Please select a different time.`;
-    return;
-  }
-
-  const appt = {
-    id: 'apt_' + Date.now(),
-    name: document.getElementById('bk-name').value.trim(),
-    phone: document.getElementById('bk-phone').value.trim(),
-    email: document.getElementById('bk-email').value.trim(),
-    service: document.getElementById('bk-service').value,
-    date: chosenDateVal,
-    time: chosenTimeVal,
-    notes: document.getElementById('bk-notes').value.trim(),
-    status: 'pending',
-    created: new Date().toISOString()
-  };
-
-  list.unshift(appt);
-  saveAppointments(list);
-  
-  msg.className = 'form-msg ok';
-  msg.textContent = `Thank you, ${appt.name}! Your appointment request for ${appt.date} at ${appt.time} has been received. Our clinic team will contact you shortly to confirm.`;
-  
-  if(FORMSPREE_ENDPOINT) {
-    const rawPayload = new FormData();
-    rawPayload.append("Patient Identity", appt.name);
-    rawPayload.append("Phone Link Channel", appt.phone);
-    rawPayload.append("Service", appt.service);
-    rawPayload.append("Calendar Schedule Target", appt.date);
-    rawPayload.append("Hour Slot Index", appt.time);
-    rawPayload.append("History Text Notes", appt.notes);
-
-    fetch(FORMSPREE_ENDPOINT, {
-      method: 'POST',
-      body: rawPayload,
-      headers: { 'Accept': 'application/json' }
-    }).catch(err => console.log("Formspree transport payload warning:", err));
-  }
-
-  document.getElementById('bookingForm').reset();
-  showToast('Appointment request sent ✓');
-});
-
-if(document.getElementById('bk-date')) {
-  document.getElementById('bk-date').min = new Date().toISOString().split('T')[0];
-}
-
-/* Session Admin Management Rules Engine */
-const ADMIN_USER = 'admin', ADMIN_PASS = 'rahfan123';
-let inMemoryAdminFlag = false;
-
-function adminLogin(){
-  const u = document.getElementById('ad-user').value.trim();
-  const p = document.getElementById('ad-pass').value.trim();
-  const msg = document.getElementById('loginMsg');
-  if(u === ADMIN_USER && p === ADMIN_PASS){
-    inMemoryAdminFlag = true;
-    document.getElementById('adminLogin').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    refreshAdmin();
-  } else {
-    msg.className = 'form-msg err'; 
-    msg.textContent = 'Incorrect username or password.';
-  }
-}
-
-function adminLogout(){
-  inMemoryAdminFlag = false;
-  document.getElementById('adminPanel').style.display = 'none';
-  document.getElementById('adminLogin').style.display = 'block';
-}
-
-function renderAdminIfLoggedIn(){
-  if(inMemoryAdminFlag){
-    document.getElementById('adminLogin').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    refreshAdmin();
-  } else {
-    document.getElementById('adminLogin').style.display = 'block';
-    document.getElementById('adminPanel').style.display = 'none';
-  }
-}
-
-function adminTab(name){
-  ['dash','appts','history','avail'].forEach(t => {
-    document.getElementById('tab-' + t).style.display = (t === name) ? 'block' : 'none';
-  });
-  document.querySelectorAll('.a-link[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  if(name === 'avail') renderAvailability();
-  if(name === 'dash' || name === 'history' || name === 'appts') refreshAdmin();
-}
-
-/* Asynchronous Non-Blocking Notification Pipeline */
-function sendPatientNotification(appt, updateType) {
-  const isConfirmed = updateType === 'confirmed';
-  let smsText, emailSubject, emailBody;
-
-  if (isConfirmed) {
-    smsText = `Dear ${appt.name}, your appointment at Rahfan Aesthetic for ${appt.service} on ${appt.date} at ${appt.time} is CONFIRMED. Location: Gulberg, Lahore.`;
-    emailSubject = "Your Appointment is Confirmed - Rahfan Aesthetic";
-    emailBody = `Dear ${appt.name},\n\nYour appointment has been confirmed.\n\nTreatment: ${appt.service}\nDate: ${appt.date}\nTime: ${appt.time}\nLocation: Gulberg, Lahore\n\nWe look forward to seeing you.\n\nRahfan Aesthetic Clinic`;
-  } else {
-    smsText = `Dear ${appt.name}, your appointment request for ${appt.service} on ${appt.date} at ${appt.time} has been cancelled. Please call 0320 2557305 to reschedule.`;
-    emailSubject = "Appointment Update - Rahfan Aesthetic";
-    emailBody = `Dear ${appt.name},\n\nWe're sorry to inform you that your appointment request for ${appt.service} on ${appt.date} at ${appt.time} has been cancelled.\n\nPlease call us at 0320 2557305 to reschedule.\n\nRahfan Aesthetic Clinic`;
-  }
-
-  // Task 1: Fire EmailJS or fallback safely inside a macro-task wrapper
-  setTimeout(() => {
-    if (appt.email && appt.email.length > 2) {
-      if (emailjsIsConfigured()) {
-        emailjs.send(NOTIFY_CONFIG.emailjsServiceId, NOTIFY_CONFIG.emailjsTemplateId, {
-          to_email: appt.email,
-          patient_name: appt.name,
-          subject: emailSubject,
-          message: emailBody
-        }).then(() => {
-          showToast('Notification email dispatched ✓');
-        }).catch((err) => {
-          console.warn('EmailJS error:', err);
-        });
+      // Synchronize hidden URL hash triggers natively
+      if (targetViewId === 'adminLoginView') {
+        if (window.location.hash !== '#admin-login') {
+          history.pushState(null, null, '#admin-login');
+        }
+      } else if (targetViewId === 'adminView') {
+        if (window.location.hash !== '#admin-panel') {
+          history.pushState(null, null, '#admin-panel');
+        }
       } else {
-        const mailHref = `mailto:${appt.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = mailHref;
-        document.body.appendChild(iframe);
-        setTimeout(() => iframe.remove(), 500);
+        if (window.location.hash) {
+          history.pushState(null, null, ' ');
+        }
       }
     }
-  }, 100);
 
-  // Task 2: Dispatch SMS deeply buffered behind the UI render loop to prevent thread locking
-  setTimeout(() => {
-    const smsHref = `sms:${appt.phone}?body=${encodeURIComponent(smsText)}`;
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = smsHref;
-    document.body.appendChild(iframe);
-    setTimeout(() => iframe.remove(), 500);
-  }, 600);
-}
+    function toggleMobileDrawer(displayStatus) {
+      document.getElementById('mobileDrawer').style.display = displayStatus ? 'flex' : 'none';
+    }
 
-/* Viewport Data Layout Processing Controllers */
-function refreshAdmin(){
-  const list = getAppointments();
-  const total = list.length;
-  const pending = list.filter(a => a.status === 'pending').length;
-  const confirmed = list.filter(a => a.status === 'confirmed').length;
-  
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayList = list.filter(a => a.date === todayStr);
-  
-  document.getElementById('st-today').textContent = todayList.length;
-  document.getElementById('st-total').textContent = total;
-  document.getElementById('st-pending').textContent = pending;
-  document.getElementById('st-confirmed').textContent = confirmed;
+    // Dynamic Hash Observer Interface Setup
+    function handleUrlHashRouting() {
+      const currentHash = window.location.hash;
+      if (currentHash === '#admin-login') {
+        if (sessionStorage.getItem('adminAuthenticated')) {
+          switchView('adminView');
+        } else {
+          switchView('adminLoginView');
+        }
+      } else if (currentHash === '#admin-panel') {
+        if (sessionStorage.getItem('adminAuthenticated')) {
+          switchView('adminView');
+        } else {
+          switchView('adminLoginView');
+        }
+      }
+    }
 
-  const todayBookingsBody = document.getElementById('todayBookingsBody');
-  const recentBody = document.getElementById('recentBody');
-  const apptBody = document.getElementById('apptBody');
-  const historyBody = document.getElementById('historyBody');
+    // Keyboard Command Interceptor Setup (Ctrl + Shift + A)
+    window.addEventListener('keydown', function(event) {
+      if (event.ctrlKey && event.shiftKey && (event.key === 'A' || event.key === 'a')) {
+        event.preventDefault();
+        if (sessionStorage.getItem('adminAuthenticated')) {
+          switchView('adminView');
+        } else {
+          switchView('adminLoginView');
+        }
+      }
+    });
 
-  if(todayList.length === 0){
-    todayBookingsBody.innerHTML = '<tr><td colspan="4"><div class="empty-state" style="padding: 20px;">No appointments scheduled for today.</div></td></tr>';
-  } else {
-    todayBookingsBody.innerHTML = todayList.map(a => `
-      <tr>
-        <td><b>${escapeHtml(a.name)}</b></td>
-        <td>${escapeHtml(a.service)}</td>
-        <td>${a.time}</td>
-        <td><span class="badge ${a.status}">${a.status}</span></td>
-      </tr>
-    `).join('');
-  }
+    // Admin Secure Login Flow Execution
+    function executeAdminLogin() {
+      const user = document.getElementById('loginUser').value;
+      const pass = document.getElementById('loginPass').value;
+      const errorUI = document.getElementById('loginErrField');
 
-  if(list.length === 0){
-    recentBody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No bookings yet.</div></td></tr>';
-    apptBody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No appointment requests yet.</div></td></tr>';
-  } else {
-    recentBody.innerHTML = list.slice(0, 6).map(a => `
-      <tr><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.service)}</td><td>${a.date} · ${a.time}</td><td><span class="badge ${a.status}">${a.status}</span></td></tr>
-    `).join('');
+      if (user === 'admin' && pass === 'iamadmin') {
+        errorUI.style.display = 'none';
+        sessionStorage.setItem('adminAuthenticated', 'true');
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+        showToast('Authentication success. Welcome!');
+        switchView('adminView');
+        refreshAdmin();
+      } else {
+        errorUI.style.display = 'block';
+      }
+    }
 
-    apptBody.innerHTML = list.map(a => `
-      <tr>
-        <td><b>${escapeHtml(a.name)}</b></td>
-        <td>📱 ${escapeHtml(a.phone)}${a.email?'<br><span style="font-size:12px; color:var(--text-muted); font-weight:500;">✉️ '+escapeHtml(a.email)+'</span>':''}</td>
-        <td><b>${escapeHtml(a.service)}</b></td>
-        <td>${a.date} @ ${a.time}</td>
-        <td><span class="badge ${a.status}">${a.status}</span></td>
-        <td><div class="row-actions">
-          <button class="mini-btn confirm" onclick="setApptStatus('${a.id}','confirmed')">Confirm</button>
-          <button class="mini-btn cancel" onclick="setApptStatus('${a.id}','cancelled')">Cancel</button>
-          <button class="mini-btn del" onclick="deleteAppt('${a.id}')">Delete</button>
-        </div></td>
-      </tr>
-    `).join('');
-  }
+    // Admin Logout and Session Termination Loop
+    function executeAdminLogout() {
+      sessionStorage.removeItem('adminAuthenticated');
+      showToast('Session terminated successfully.');
+      switchView('homeView');
+    }
 
-  const confirmedHistoryList = list.filter(a => a.status === 'confirmed');
-  if(confirmedHistoryList.length === 0){
-    historyBody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No confirmed appointments yet.</div></td></tr>';
-  } else {
-    historyBody.innerHTML = confirmedHistoryList.map(a => `
-      <tr>
-        <td><b>${escapeHtml(a.name)}</b></td>
-        <td>📱 ${escapeHtml(a.phone)}</td>
-        <td>${escapeHtml(a.service)}</td>
-        <td>📆 ${a.date} at ${a.time}</td>
-        <td><span class="badge confirmed">Logged & Archived</span></td>
-      </tr>
-    `).join('');
-  }
-}
+    // Local Storage Wrapper Data Management Engines
+    function getAppointments() {
+      const raw = localStorage.getItem('rahfan_appointments');
+      return raw ? JSON.parse(raw) : [];
+    }
+    function saveAppointments(array) {
+      localStorage.setItem('rahfan_appointments', JSON.stringify(array));
+    }
+    function getAvailability() {
+      const raw = localStorage.getItem('rahfan_availability');
+      return raw ? JSON.parse(raw) : DEFAULT_AVAILABILITY;
+    }
 
-function escapeHtml(s){
-  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+    // Custom Clinical Logic Validation Constraints
+    function getDayOfWeekAbbreviation(dateString) {
+      if(!dateString) return '';
+      const dayIndex = new Date(dateString).getDay();
+      // JavaScript mapping translates 0=Sunday, 1=Monday...
+      const mapping = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      return mapping[dayIndex];
+    }
 
-/* The Fixed Status Core Engine */
-function setApptStatus(id, status){
-  const list = getAppointments();
-  const idx = list.findIndex(a => a.id === id);
-  if(idx > -1){ 
-    const targetAppt = list[idx];
-    
-    if(status === 'confirmed') {
-      const alreadyConfirmed = list.some(a => a.date === targetAppt.date && a.time === targetAppt.time && a.status === 'confirmed' && a.id !== id);
-      if(alreadyConfirmed) {
-        alert(`This time slot is already booked. Another patient is confirmed for ${targetAppt.time} on ${targetAppt.date}.`);
+    // Patient Intake Booking Validation Loop Hook
+    document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = this;
+      const msgBox = document.getElementById('formMsg');
+      
+      const pName = document.getElementById('pName').value.trim();
+      const pPhone = document.getElementById('pPhone').value.trim();
+      const pEmail = document.getElementById('pEmail').value.trim();
+      const pService = document.getElementById('pService').value;
+      const pDate = document.getElementById('pDate').value;
+      const pTime = document.getElementById('pTime').value;
+      const pNotes = document.getElementById('pNotes').value.trim();
+
+      msgBox.className = "form-msg";
+      msgBox.style.display = "none";
+
+      // 1. Structural Availability Mapping Intersection Check
+      const targetDayAbbrev = getDayOfWeekAbbreviation(pDate);
+      const activeClinicMap = getAvailability();
+
+      if(activeClinicMap[targetDayAbbrev] === 'Closed') {
+        msgBox.innerText = `The clinic is completely closed on Sundays/holidays (${targetDayAbbrev}). Please choose an alternate date.`;
+        msgBox.classList.add('err');
         return;
       }
+
+      // 2. Transmit payload to Formspree collector endpoint
+      const payloadData = new FormData(form);
+      let formspreeSuccess = false;
+
+      try {
+        const response = await fetch(form.action, {
+          method: form.method,
+          body: payloadData,
+          headers: { 'Accept': 'application/json' }
+        });
+        if(response.ok) {
+          formspreeSuccess = true;
+        }
+      } catch(err) {
+        console.error("Formspree data ingestion exception:", err);
+      }
+
+      if(!formspreeSuccess) {
+        msgBox.innerText = "Network pipeline failure. Please check your data connectivity framework and try again.";
+        msgBox.classList.add('err');
+        return;
+      }
+
+      // 3. Persist local entity logs inside browser storage state
+      const bookingRecord = {
+        id: 'apt_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        name: pName,
+        phone: pPhone,
+        email: pEmail,
+        service: pService,
+        date: pDate,
+        time: pTime,
+        notes: pNotes,
+        status: 'pending',
+        timestamp: new Date().toISOString()
+      };
+
+      const existingCollection = getAppointments();
+      existingCollection.push(bookingRecord);
+      saveAppointments(existingCollection);
+
+      // 4. Trigger patient receipt notification loop via EmailJS
+      sendPatientNotification(bookingRecord, 'pending');
+
+      // Refresh layout visualization metrics asynchronously
+      msgBox.innerText = "Your clinical request has been transmitted successfully. Our desk will confirm parameters via email/WhatsApp shortly.";
+      msgBox.classList.add('ok');
+      form.reset();
+      refreshAdmin();
+    });
+
+    // Automated Transaction Email Dispatch Module via EmailJS
+    function sendPatientNotification(apptObject, status) {
+      if(!apptObject.email) return;
+
+      let emailTemplateId = "";
+      let emailParams = {
+        patient_name: apptObject.name,
+        patient_email: apptObject.email,
+        requested_service: apptObject.service,
+        appointment_date: apptObject.date,
+        appointment_time: apptObject.time,
+        clinic_contact: "+92 300 1234567"
+      };
+
+      if(status === 'pending') {
+        // Linked directly to EmailJS "Intake Request Recieved Template"
+        emailTemplateId = "template_7bsh296"; 
+      } else if(status === 'confirmed') {
+        // Linked directly to EmailJS "Booking Confirmed Template"
+        emailTemplateId = "template_m83jscb"; 
+      } else if(status === 'cancelled') {
+        // Linked directly to EmailJS "Booking Cancelled/Reschedule Template"
+        emailTemplateId = "template_anw8w0n"; 
+      }
+
+      if(!emailTemplateId) return;
+
+      emailjs.send("service_co9m4gr", emailTemplateId, emailParams)
+        .then(() => console.log(`Notification system dispatched state [${status}] to client.`))
+        .catch((error) => console.error("EmailJS mail routing pipeline block:", error));
     }
+
+    // Dynamic Administrative Content Assembly Interfaces
+    function switchAdminTab(targetTabId) {
+      currentActiveAdminTab = targetTabId;
+      if(targetTabId === 'appts') {
+        document.getElementById('tabAppts').style.display = 'block';
+        document.getElementById('tabAvail').style.display = 'none';
+        document.getElementById('btnTabAppts').classList.add('active');
+        document.getElementById('btnTabAvail').classList.remove('active');
+      } else {
+        document.getElementById('tabAppts').style.display = 'none';
+        document.getElementById('tabAvail').style.display = 'block';
+        document.getElementById('btnTabAppts').classList.remove('active');
+        document.getElementById('btnTabAvail').classList.add('active');
+        renderAvailabilityGrid();
+      }
+    }
+
+    function sanitizeHtmlEntities(rawString) {
+      if(!rawString) return '';
+      return rawString.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&#39;');
+    }
+
+    function refreshAdmin() {
+      // Guard metrics rendering execution framework loop if view is unmounted
+      if(!sessionStorage.getItem('adminAuthenticated')) return;
+
+      const list = getAppointments();
+      
+      // Calculate dynamic count summary metrics
+      let total = list.length;
+      let pending = list.filter(a => a.status === 'pending').length;
+      let confirmed = list.filter(a => a.status === 'confirmed').length;
+      let cancelled = list.filter(a => a.status === 'cancelled').length;
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statPending').innerText = pending;
+      document.getElementById('statConfirmed').innerText = confirmed;
+      document.getElementById('statCancelled').innerText = cancelled;
+
+      const tbody = document.getElementById('apptsTableBody');
+      if(list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="glyph">❀</div>No registration logs found inside storage framework.</div></td></tr>`;
+        return;
+      }
+
+      // Order by inverse sequential chronologies
+      const renderedRows = list.slice().reverse().map(appt => {
+        const safeName = sanitizeHtmlEntities(appt.name);
+        const safePhone = sanitizeHtmlEntities(appt.phone);
+        const safeEmail = sanitizeHtmlEntities(appt.email);
+        const safeNotes = sanitizeHtmlEntities(appt.notes);
+
+        return `
+          <tr>
+            <td>
+              <strong style="color:var(--primary-dark); font-size:15px;">${safeName}</strong><br>
+              <span style="font-size:12px; color:var(--text-muted); display:inline-block; margin-top:4px;">📱 ${safePhone}</span><br>
+              <span style="font-size:12px; color:var(--text-muted);">✉️ ${safeEmail}</span>
+              ${safeNotes ? `<div style="font-size:11.5px; background:#F1EFEA; padding:6px 10px; border-radius:4px; margin-top:8px; color:var(--primary-soft); max-width:280px;">📝 ${safeNotes}</div>` : ''}
+            </td>
+            <td style="font-weight:600; color:var(--primary-dark);">${sanitizeHtmlEntities(appt.service)}</td>
+            <td>
+              <span style="white-space:nowrap; font-weight:500;">📅 ${sanitizeHtmlEntities(appt.date)}</span><br>
+              <span style="font-size:12px; color:var(--text-muted); white-space:nowrap;">🕒 ${sanitizeHtmlEntities(appt.time)}</span>
+            </td>
+            <td><span class="badge ${appt.status}">${appt.status}</span></td>
+            <td style="text-align:right;">
+              <div class="row-actions" style="justify-content: flex-end;">
+                ${appt.status === 'pending' ? `
+                  <button class="mini-btn confirm" onclick="updateAppointmentStatus('${appt.id}', 'confirmed')">Confirm</button>
+                  <button class="mini-btn cancel" onclick="updateAppointmentStatus('${appt.id}', 'cancelled')">Cancel</button>
+                ` : ''}
+                <button class="mini-btn del" onclick="deleteAppointmentRecord('${appt.id}')">✕</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = renderedRows;
+    }
+
+    function updateAppointmentStatus(id, status) {
+      let list = getAppointments();
+      const targetAppt = list.find(a => a.id === id);
+      
+      if(targetAppt) {
+        // Business logic constraint validation check step
+        if (status === 'confirmed') {
+          const targetDayAbbrev = getDayOfWeekAbbreviation(targetAppt.date);
+          const activeClinicMap = getAvailability();
+          if (activeClinicMap[targetDayAbbrev] === 'Closed') {
+            alert(`Operational structural conflict: Cannot approve booking. The clinic map configuration is marked as 'Closed' on ${targetDayAbbrev} (${targetAppt.date}).`);
+            return;
+          }
+        }
+        
+        targetAppt.status = status; 
+        saveAppointments(list); 
+        refreshAdmin(); 
+        showToast('Status successfully marked as ' + status); 
+        
+        sendPatientNotification(targetAppt, status);
+      }
+    }
+
+    function deleteAppointmentRecord(id) {
+      if(!confirm('Are you sure you want to permanently delete this booking?')) return;
+      let list = getAppointments();
+      list = list.filter(a => a.id !== id);
+      saveAppointments(list);
+      refreshAdmin();
+      showToast('Booking deleted');
+    }
+
+    function renderAvailabilityGrid() {
+      const avail = getAvailability();
+      const grid = document.getElementById('availGrid');
+      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      grid.innerHTML = days.map(d => `
+        <div class=\"day-card\">
+          <div class=\"d-name\">${d}</div>
+          <select id=\"av-${d}\">
+            <option value=\"Open\" ${avail[d]==='Open'?'selected':''}>Open</option>
+            <option value=\"Closed\" ${avail[d]==='Closed'?'selected':''}>Closed</option>
+          </select>
+        </div>
+      `).join('');
+    }
+
+    function saveAvailability() {
+      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const avail = {};
+      days.forEach(d => { avail[d] = document.getElementById('av-' + d).value; });
+      try {
+        localStorage.setItem('rahfan_availability', JSON.stringify(avail));
+        showToast('Availability updated successfully ✓');
+        renderAvailabilityGrid();
+      } catch(e) {
+        showToast('Storage serialization exception error.');
+      }
+    }
+
+    function clearAllAppointmentsMockData() {
+      if(!confirm('Danger! Are you sure you want to wipe all records from local browser storage?')) return;
+      localStorage.removeItem('rahfan_appointments');
+      showToast('All transaction records purged.');
+      refreshAdmin();
+    }
+
+    // Toast Core Presentation Loop Component
+    function showToast(message) {
+      const toast = document.getElementById('toastWidget');
+      toast.innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 3500);
+    }
+
+    // Monitor Hash Routings and Init Application Context Loops
+    window.addEventListener('hashchange', handleUrlHashRouting);
     
-    targetAppt.status = status; 
-    saveAppointments(list); 
-    refreshAdmin(); 
-    showToast('Status successfully marked as ' + status); 
-    
-    sendPatientNotification(targetAppt, status);
-  }
-}
-
-function deleteAppt(id){
-  if(!confirm('Are you sure you want to permanently delete this booking?')) return;
-  let list = getAppointments();
-  list = list.filter(a => a.id !== id);
-  saveAppointments(list);
-  refreshAdmin();
-  showToast('Booking deleted');
-}
-
-function renderAvailability(){
-  const avail = getAvailability();
-  const grid = document.getElementById('availGrid');
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  grid.innerHTML = days.map(d => `
-    <div class="day-card">
-      <div class="d-name">${d}</div>
-      <select id="av-${d}">
-        <option value="Open" ${avail[d]==='Open'?'selected':''}>Open</option>
-        <option value="Closed" ${avail[d]==='Closed'?'selected':''}>Closed</option>
-      </select>
-    </div>
-  `).join('');
-}
-
-function saveAvailability(){
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const avail = {};
-  days.forEach(d => { avail[d] = document.getElementById('av-' + d).value; });
-  try {
-    localStorage.setItem('rahfan_availability', JSON.stringify(avail));
-    showToast('Availability updated successfully ✓');
-  } catch(e) { 
-    showToast('Could not save availability. Please try again.'); 
-  }
-}
-
-renderAdminIfLoggedIn();
-</script>
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Initial setup date thresholds restriction constraint logic
+      const dateInput = document.getElementById('pDate');
+      if(dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+      }
+      
+      // 2. Refresh runtime frameworks values configurations parameters 
+      handleUrlHashRouting();
+      refreshAdmin();
+    });
+  </script>
 </body>
 </html>
