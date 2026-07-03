@@ -253,11 +253,11 @@
   .badge.cancelled { background: #FCE8E6; color: #C5221F; }
   .row-actions { display: flex; gap: 8px; }
   
-  .mini-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; border-radius: var(--radius-sm); }
-  .mini-btn.confirm { border-color: #137333; color: #137333; }
-  .mini-btn.confirm:hover { background: #E6F4EA; }
-  .mini-btn.cancel { border-color: #C5221F; color: #C5221F; }
-  .mini-btn.cancel:hover { background: #FCE8E6; }
+  .mini-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.02em; }
+  .mini-btn.confirm { border-color: #137333; color: #137333; background: #FAFDFB; }
+  .mini-btn.confirm:hover { background: #E6F4EA; transform: scale(1.03); }
+  .mini-btn.cancel { border-color: #C5221F; color: #C5221F; background: #FFF9F9; }
+  .mini-btn.cancel:hover { background: #FCE8E6; transform: scale(1.03); }
   .mini-btn.del { border-color: var(--text-muted); color: var(--text-muted); }
   .mini-btn.del:hover { background: var(--bg-gray); }
   
@@ -774,7 +774,7 @@ function defaultAvailability(){
   return {Mon:"Open",Tue:"Open",Wed:"Open",Thu:"Open",Fri:"Open",Sat:"Open",Sun:"Closed"};
 }
 
-/* Form Booking Processing Matrix Engine */
+/* Booking Request Handler */
 document.getElementById('bookingForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const msg = document.getElementById('bookMsg');
@@ -889,7 +889,7 @@ function adminTab(name){
   if(name === 'dash' || name === 'history' || name === 'appts') refreshAdmin();
 }
 
-/* Alerts System (SMS + Email Protocols) */
+/* Asynchronous Non-Blocking Notification Pipeline */
 function sendPatientNotification(appt, updateType) {
   const isConfirmed = updateType === 'confirmed';
   let smsText, emailSubject, emailBody;
@@ -904,7 +904,7 @@ function sendPatientNotification(appt, updateType) {
     emailBody = `Dear ${appt.name},\n\nWe're sorry to inform you that your appointment request for ${appt.service} on ${appt.date} at ${appt.time} has been cancelled.\n\nPlease call us at 0320 2557305 to reschedule.\n\nRahfan Aesthetic Clinic`;
   }
 
-  // Non-blocking protocol initialization loop via safe browser context loops
+  // Task 1: Fire EmailJS or fallback safely inside a macro-task wrapper
   setTimeout(() => {
     if (appt.email && appt.email.length > 2) {
       if (emailjsIsConfigured()) {
@@ -915,20 +915,30 @@ function sendPatientNotification(appt, updateType) {
           message: emailBody
         }).then(() => {
           showToast('Notification email dispatched ✓');
-        }).catch(() => {
-          console.warn('EmailJS fallback active.');
+        }).catch((err) => {
+          console.warn('EmailJS error:', err);
         });
       } else {
+        // Safe context injection using hidden non-disruptive iframe hooks
         const mailHref = `mailto:${appt.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-        window.location.href = mailHref;
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = mailHref;
+        document.body.appendChild(iframe);
+        setTimeout(() => iframe.remove(), 500);
       }
     }
-  }, 300);
+  }, 100);
 
+  // Task 2: Dispatch SMS deeply buffered behind the UI render loop to prevent thread locking
   setTimeout(() => {
     const smsHref = `sms:${appt.phone}?body=${encodeURIComponent(smsText)}`;
-    window.location.href = smsHref;
-  }, 1000);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = smsHref;
+    document.body.appendChild(iframe);
+    setTimeout(() => iframe.remove(), 500);
+  }, 600);
 }
 
 /* Viewport Data Layout Processing Controllers */
@@ -1008,11 +1018,13 @@ function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* The Fixed Status Core Engine */
 function setStatus(id, status){
   const list = getAppointments();
   const idx = list.findIndex(a => a.id === id);
   if(idx > -1){ 
     const targetAppt = list[idx];
+    
     if(status === 'confirmed') {
       const alreadyConfirmed = list.some(a => a.date === targetAppt.date && a.time === targetAppt.time && a.status === 'confirmed' && a.id !== id);
       if(alreadyConfirmed) {
@@ -1020,10 +1032,18 @@ function setStatus(id, status){
         return;
       }
     }
+    
+    // 1. Mutate state inside RAM first
     targetAppt.status = status; 
+    
+    // 2. Commit transaction directly to local storage layout
     saveAppointments(list); 
+    
+    // 3. Complete structural UI rebuilding loops
     refreshAdmin(); 
     showToast('Status successfully marked as ' + status); 
+    
+    // 4. Safely forward notification actions out of the current event loop execution frame
     sendPatientNotification(targetAppt, status);
   }
 }
