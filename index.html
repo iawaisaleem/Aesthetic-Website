@@ -714,8 +714,14 @@
     let emailjsReady = false;
     try {
       if (typeof emailjs !== 'undefined') {
-        // Double-initialized for cross-version compatibility safety
-        emailjs.init("kV6ne6GvGBjdk1XRv");
+        // FIX: @emailjs/browser v4 requires an options object, not a bare
+        // string. `emailjs.init("kV6ne6GvGBjdk1XRv")` looked like it worked
+        // (no error thrown) but never actually set the public key on the
+        // SDK, so every emailjs.send() call downstream was rejected by
+        // EmailJS's API for missing/invalid credentials — which is exactly
+        // why every admin and patient notification email was failing while
+        // the appointment itself still saved correctly.
+        emailjs.init({ publicKey: "kV6ne6GvGBjdk1XRv" });
         emailjsReady = true;
       } else {
         console.warn('EmailJS library did not load — email notifications will be skipped.');
@@ -909,13 +915,21 @@
 
           refreshAdmin();
 
+          function describeEmailError(err) {
+            if (!err) return 'Unknown error';
+            if (typeof err === 'string') return err;
+            if (err.text) return err.text;
+            if (err.message) return err.message;
+            try { return JSON.stringify(err); } catch (e) { return String(err); }
+          }
+
           // 1. Core Admin Email Dispatch Route (Awaited to ensure completion)
           if (emailjsReady) {
             try {
               await sendAdminNotification(bookingRecord);
             } catch(adminErr) {
-              console.error(adminErr);
-              emailDiagnosticsError = "Admin notification pipeline failed.";
+              console.error('Admin notification failed:', adminErr);
+              emailDiagnosticsError = describeEmailError(adminErr);
             }
           } else {
             emailDiagnosticsError = "EmailJS SDK is missing or not fully ready.";
@@ -927,8 +941,8 @@
               await sendPatientNotification(bookingRecord, 'pending');
               sendPatientSMS(bookingRecord, 'Your appointment request has been received and is pending operator approval.');
             } catch (notifyErr) {
-              console.error(notifyErr);
-              if (!emailDiagnosticsError) emailDiagnosticsError = "Patient email notification pipeline failed.";
+              console.error('Patient notification failed:', notifyErr);
+              if (!emailDiagnosticsError) emailDiagnosticsError = describeEmailError(notifyErr);
             }
           }
 
@@ -951,19 +965,25 @@
             console.error('Formspree secondary pipeline bypassed:', relayErr);
           }
 
-          // UI response reporting based on pipeline telemetry outputs
+          // UI response reporting based on pipeline telemetry outputs.
+          // The appointment is ALWAYS saved successfully at this point
+          // (it happened above, before any email/SMS attempt), so we no
+          // longer show a scary red "failed" message to the patient just
+          // because a notification email had trouble — that only confuses
+          // people into thinking their booking didn't go through. Booking
+          // success and notification delivery are now reported separately.
           if (emailDiagnosticsError) {
-            msgBox.innerText = `Appointment saved locally, but email failed: ${emailDiagnosticsError}. Please check your EmailJS dashboard configs.`;
-            msgBox.classList.add('err');
+            msgBox.innerText = 'Your appointment has been booked successfully! We had trouble sending the confirmation email, but our desk will still review your request.';
+            console.warn('Notification email issue (booking itself succeeded):', emailDiagnosticsError);
+            form.reset();
           } else if (formspreeSuccess) {
             msgBox.innerText = 'Your clinical request has been booked successfully! Confirmation emails have been sent out.';
-            msgBox.classList.add('ok');
             form.reset();
           } else {
             msgBox.innerText = 'Your appointment has been successfully booked and emails sent.';
-            msgBox.classList.add('ok');
             form.reset();
           }
+          msgBox.classList.add('ok');
           showToast('Appointment completed ✓');
         } catch (fatalErr) {
           console.error('Unexpected pipeline processing crash:', fatalErr);
