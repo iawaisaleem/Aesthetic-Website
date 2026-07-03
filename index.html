@@ -700,12 +700,12 @@
     // NOTIFICATION CREDENTIAL CONFIGURATION MATRIX
     // ==========================================
     const GLOBAL_CONFIG = {
-      emailjsServiceId: "service_co9m4gr",
-      adminNotificationTemplateId: "template_24kt4x1", 
-      patientPendingTemplateId: "template_7bsh296",
-      patientConfirmedTemplateId: "template_m83jscb",
-      patientCancelledTemplateId: "template_anw8w0n",
-      adminEmailAddress: "info@rahfanaesthetic.com",
+  emailjsServiceId: "service_w4jkb4i", // Your actual Service ID
+  adminNotificationTemplateId: "template_24kt4x1", 
+  patientPendingTemplateId: "template_7bsh296",
+  patientConfirmedTemplateId: "template_m83jscb",
+  patientCancelledTemplateId: "template_anw8w0n",
+  adminEmailAddress: "awaisalee000@gmail.com", // Your admin email
       
       smsGatewayEnabled: false, 
       smsApiEndpoint: "https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json"
@@ -715,7 +715,7 @@
     try {
       if (typeof emailjs !== 'undefined') {
         // Double-initialized for cross-version compatibility safety
-        emailjs.init("H8G2_p3u2v_W1-O7o");
+        emailjs.init("kV6ne6GvGBjdk1XRv");
         emailjsReady = true;
       } else {
         console.warn('EmailJS library did not load — email notifications will be skipped.');
