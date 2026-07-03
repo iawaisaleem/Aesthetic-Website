@@ -374,8 +374,8 @@
     <div class="container">
       <div>📍 14-C, Main Boulevard, Gulberg III, Lahore</div>
       <div class="tb-links">
-        <a href="tel:03202557305">📞 03202557305</a>
-        <a href="mailto:awaisalee000@gmail.com">✉️ awaisalee000@gmail.com</a>
+        <a href="tel:+923001234567">📞 +92 300 1234567</a>
+        <a href="mailto:info@rahfanaesthetic.com">✉️ info@rahfanaesthetic.com</a>
       </div>
     </div>
   </div>
@@ -538,7 +538,7 @@
           <div class="info-row">
             <div>
               <b>Direct Helpline</b>
-              <span style="color:#fff; font-size:16px; font-weight:600;">03202557305</span>
+              <span style="color:#fff; font-size:16px; font-weight:600;">+92 300 1234567</span>
             </div>
           </div>
           <div class="info-row">
@@ -696,16 +696,21 @@
   <div class="toast" id="toastWidget">System Operation Completed Successfully ✓</div>
 
   <script>
-    // System-wide Secure Environment Variables and Administrative Parameters Configuration
-    const ENV = {
-      ADMIN_EMAIL: "awaisalee000@gmail.com",
-      ADMIN_PHONE: "03202557305",
-      DOCTOR_NAME: "Dr. Rahfan Ali",
-      DEPARTMENT_NAME: "Clinical Dermatology & Aesthetics",
-      // Sensitive API configuration placeholders mapped to environment schemas
-      TWILIO_ACCOUNT_SID: window.process?.env?.TWILIO_ACCOUNT_SID || "YOUR_TWILIO_ACCOUNT_SID",
-      TWILIO_AUTH_TOKEN: window.process?.env?.TWILIO_AUTH_TOKEN || "YOUR_TWILIO_AUTH_TOKEN",
-      TWILIO_PHONE_NUMBER: window.process?.env?.TWILIO_PHONE_NUMBER || "YOUR_TWILIO_SENDER_NUMBER"
+    // ==========================================
+    // NOTIFICATION CREDENTIAL CONFIGURATION MATRIX
+    // ==========================================
+    const GLOBAL_CONFIG = {
+      emailjsServiceId: "service_co9m4gr",
+      adminNotificationTemplateId: "template_24kt4x1", // ← Create & put your Admin Alert Template ID here
+      patientPendingTemplateId: "template_7bsh296",
+      patientConfirmedTemplateId: "template_m83jscb",
+      patientCancelledTemplateId: "template_anw8w0n",
+      adminEmailAddress: "info@rahfanaesthetic.com",
+      
+      // OPTIONAL SMS API INTEGRATION GATEWAY
+      // If using Twilio, replace these placeholder fields.
+      smsGatewayEnabled: false, 
+      smsApiEndpoint: "https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json"
     };
 
     let emailjsReady = false;
@@ -722,12 +727,15 @@
       console.error('EmailJS init failed — email notifications will be skipped, but booking will still work.', initErr);
     }
 
+    // Default Configuration states fallback matrices
     const DEFAULT_AVAILABILITY = {
       'Mon': 'Open', 'Tue': 'Open', 'Wed': 'Open', 'Thu': 'Open', 'Fri': 'Open', 'Sat': 'Open', 'Sun': 'Closed'
     };
 
+    // Global Application State Matrix Variables
     let currentActiveAdminTab = 'appts';
 
+    // Application Router Framework Logic Engine
     function switchView(targetViewId) {
       if (targetViewId === 'adminView' && !sessionStorage.getItem('adminAuthenticated')) {
         targetViewId = 'adminLoginView';
@@ -769,13 +777,7 @@
 
     function handleUrlHashRouting() {
       const currentHash = window.location.hash;
-      if (currentHash === '#admin-login') {
-        if (sessionStorage.getItem('adminAuthenticated')) {
-          switchView('adminView');
-        } else {
-          switchView('adminLoginView');
-        }
-      } else if (currentHash === '#admin-panel') {
+      if (currentHash === '#admin-login' || currentHash === '#admin-panel') {
         if (sessionStorage.getItem('adminAuthenticated')) {
           switchView('adminView');
         } else {
@@ -900,9 +902,9 @@
             service: pService,
             date: pDate,
             time: pTime,
-            notes: pNotes || "None provided",
+            notes: pNotes,
             status: 'pending',
-            timestamp: new Date().toLocaleString()
+            timestamp: new Date().toISOString()
           };
 
           const existingCollection = getAppointments();
@@ -910,6 +912,13 @@
           saveAppointments(existingCollection);
 
           refreshAdmin();
+
+          // 1. Direct EmailJS Admin alert dispatching
+          try {
+            sendAdminNotification(bookingRecord);
+          } catch(adminErr) {
+            console.error('Admin EmailJS alert routine failed:', adminErr);
+          }
 
           let formspreeSuccess = false;
           try {
@@ -926,28 +935,28 @@
             clearTimeout(timeoutId);
             formspreeSuccess = response.ok;
           } catch (relayErr) {
-            console.error('Formspree relay failed:', relayErr);
+            console.error('Formspree secondary pipeline bypassed:', relayErr);
           }
 
-          // Asynchronous Notification Dispatcher
+          // 2. Client alert loop dispatching
           try {
             sendPatientNotification(bookingRecord, 'pending');
-            sendAdminNotificationEmail(bookingRecord);
+            sendPatientSMS(bookingRecord, 'Your appointment request has been received and is pending operator approval.');
           } catch (notifyErr) {
-            console.error('Background notifications system failure logs:', notifyErr);
+            console.error('Patient confirmation pipelines failed:', notifyErr);
           }
 
           if (formspreeSuccess) {
             msgBox.innerText = 'Your clinical request has been booked successfully. Our desk will confirm parameters via email/WhatsApp shortly.';
           } else {
-            msgBox.innerText = 'Your appointment has been booked and saved. We had trouble sending the email confirmation, but our desk will still review your request.';
+            msgBox.innerText = 'Your appointment has been booked and saved. Our clinical desk will review your request shortly.';
           }
           msgBox.classList.add('ok');
           form.reset();
           showToast('Appointment booked ✓');
         } catch (fatalErr) {
-          console.error('Unexpected error while booking appointment:', fatalErr);
-          msgBox.innerText = 'Something went wrong while saving your appointment. Please try again.';
+          console.error('Unexpected storage structure failure:', fatalErr);
+          msgBox.innerText = 'Something went wrong while saving your appointment. Please contact us directly via WhatsApp.';
           msgBox.classList.add('err');
         } finally {
           isSubmittingAppointment = false;
@@ -959,36 +968,31 @@
       });
     }
 
-    // Task 2: Email Notification to Admin Setup (Subject: New Appointment Booking)
-    function sendAdminNotificationEmail(apptObject) {
-      if(!emailjsReady) return;
-      
-      const adminParams = {
-        subject_line: "New Appointment Booking",
-        to_email: ENV.ADMIN_EMAIL,
+    // NEW FUNCTION: Dedicated Admin Notification Dispatched Loop
+    function sendAdminNotification(apptObject) {
+      if (!emailjsReady) return;
+
+      let adminParams = {
+        admin_email: GLOBAL_CONFIG.adminEmailAddress,
         patient_name: apptObject.name,
-        patient_email: apptObject.email,
         patient_phone: apptObject.phone,
+        patient_email: apptObject.email,
+        requested_service: apptObject.service,
         appointment_date: apptObject.date,
         appointment_time: apptObject.time,
-        doctor_name: ENV.DOCTOR_NAME,
-        department_name: ENV.DEPARTMENT_NAME,
-        appointment_id: apptObject.id,
-        patient_notes: apptObject.notes,
-        booking_time: apptObject.timestamp
+        patient_notes: apptObject.notes || "None provided"
       };
 
-      // Uses standard EmailJS routing logic asynchronously
-      emailjs.send("service_co9m4gr", "template_admin_notify", adminParams)
-        .then(() => console.log("Admin email notification successfully dispatched."))
-        .catch((error) => console.error("Admin notification logging error block:", error));
+      emailjs.send(GLOBAL_CONFIG.emailjsServiceId, GLOBAL_CONFIG.adminNotificationTemplateId, adminParams)
+        .then(() => console.log("System operator successfully notified of new booking layout."))
+        .catch((error) => console.error("Admin notification pathway failure:", error));
     }
 
-    // Task 3: Patient Notification Dispatch Module via EmailJS
+    // Enhanced Automated Transaction Email Dispatch Module via EmailJS
     function sendPatientNotification(apptObject, status) {
       if(!apptObject.email) return;
       if(!emailjsReady) {
-        console.warn('EmailJS not available — skipping notification email.');
+        console.warn('EmailJS not initialized — skipping client email routing setup.');
         return;
       }
 
@@ -999,62 +1003,47 @@
         requested_service: apptObject.service,
         appointment_date: apptObject.date,
         appointment_time: apptObject.time,
-        doctor_name: ENV.DOCTOR_NAME,
-        appointment_id: apptObject.id,
-        clinic_contact: ENV.ADMIN_PHONE
+        clinic_contact: "+92 300 1234567",
+        current_status: status.toUpperCase()
       };
 
       if(status === 'pending') {
-        emailTemplateId = "template_7bsh296"; 
+        emailTemplateId = GLOBAL_CONFIG.patientPendingTemplateId; 
       } else if(status === 'confirmed') {
-        emailParams.subject_line = "Your Appointment Has Been Confirmed";
-        emailTemplateId = "template_m83jscb"; 
+        emailTemplateId = GLOBAL_CONFIG.patientConfirmedTemplateId; 
       } else if(status === 'cancelled') {
-        emailParams.subject_line = "Your Appointment Has Been Cancelled";
-        emailTemplateId = "template_anw8w0n"; 
+        emailTemplateId = GLOBAL_CONFIG.patientCancelledTemplateId; 
       }
 
       if(!emailTemplateId) return;
 
-      emailjs.send("service_co9m4gr", emailTemplateId, emailParams)
+      emailjs.send(GLOBAL_CONFIG.emailjsServiceId, emailTemplateId, emailParams)
         .then(() => console.log(`Notification system dispatched state [${status}] to client.`))
         .catch((error) => console.error("EmailJS mail routing pipeline block:", error));
     }
 
-    // Task 4: Twilio Production Web Service SMS Provider Integration Layer
-    async function transmitTwilioSms(recipientPhone, messageBody) {
-      if (ENV.TWILIO_ACCOUNT_SID === "YOUR_TWILIO_ACCOUNT_SID" || ENV.TWILIO_AUTH_TOKEN === "YOUR_TWILIO_AUTH_TOKEN") {
-        console.warn("SMS System Log: Twilio environment variables are unconfigured. Skipping dispatch framework gracefully.");
+    // NEW FUNCTION: Architecture Framework Module for SMS Carrier Delivery
+    function sendPatientSMS(apptObject, textMessageContent) {
+      if (!GLOBAL_CONFIG.smsGatewayEnabled) {
+        console.log(`[SMS MOCK ROUTE] To Phone: ${apptObject.phone} | Content: ${textMessageContent}`);
         return;
       }
 
-      const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${ENV.TWILIO_ACCOUNT_SID}/Messages.json`;
-      
-      // Standard application configuration headers payload parameter compilation
-      const postParameters = new URLSearchParams();
-      postParameters.append("To", recipientPhone);
-      postParameters.append("From", ENV.TWILIO_PHONE_NUMBER);
-      postParameters.append("Body", messageBody);
-
-      try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Authorization": "Basic " + btoa(`${ENV.TWILIO_ACCOUNT_SID}:${ENV.TWILIO_AUTH_TOKEN}`),
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: postParameters
-        });
-
-        if (!response.ok) {
-          const failureData = await response.json();
-          console.error("Twilio cloud provider rejected transmission payload block:", failureData);
-        } else {
-          console.log(`SMS successfully dispatched to ${recipientPhone}`);
-        }
-      } catch (error) {
-        console.error("Critical asynchronous network exception error logging within SMS subsystem:", error);
-      }
+      // Professional Fetch Integration Blueprint for standard production carrier gateways
+      fetch(GLOBAL_CONFIG.smsApiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa('YOUR_ACCOUNT_SID:YOUR_AUTH_TOKEN')
+        },
+        body: JSON.stringify({
+          To: apptObject.phone,
+          From: 'RahfanClinic',
+          Body: textMessageContent
+        })
+      })
+      .then(res => console.log('SMS pipeline status response generated: ', res.status))
+      .catch(err => console.error('SMS system infrastructure exception rejected: ', err));
     }
 
     function switchAdminTab(targetTabId) {
@@ -1114,7 +1103,7 @@
             <td>
               <strong style="color:var(--primary-dark); font-size:15px;">${safeName}</strong><br>
               <span style="font-size:12px; color:var(--text-muted); display:inline-block; margin-top:4px;">📱 ${safePhone}</span><br>
-              <span style="font-size:12px; color:var(--text-muted);">✉️ ${safeEmail}</span>
+              <span style="font-size:12px; color:var(--text-muted); ">✉️ ${safeEmail}</span>
               ${safeNotes ? `<div style="font-size:11.5px; background:#F1EFEA; padding:6px 10px; border-radius:4px; margin-top:8px; color:var(--primary-soft); max-width:280px;">📝 ${safeNotes}</div>` : ''}
             </td>
             <td style="font-weight:600; color:var(--primary-dark);">${sanitizeHtmlEntities(appt.service)}</td>
@@ -1144,9 +1133,6 @@
       const targetAppt = list.find(a => a.id === id);
       
       if(targetAppt) {
-        // Prevent duplicate operations on state fields that have already left pending state
-        if (targetAppt.status !== 'pending') return;
-
         if (status === 'confirmed') {
           const targetDayAbbrev = getDayOfWeekAbbreviation(targetAppt.date);
           const activeClinicMap = getAvailability();
@@ -1161,20 +1147,15 @@
         refreshAdmin(); 
         showToast('Status successfully marked as ' + status); 
         
-        // Triggering Automated Patient Communication Engine Channels
+        // Dispatches client-facing confirmation routines automatically
         sendPatientNotification(targetAppt, status);
 
-        // Conditional Asynchronous SMS Notification Processing Logic Framework
-        let smsMessageText = "";
-        if (status === 'confirmed') {
-          smsMessageText = `Dear ${targetAppt.name}, your appointment with ${ENV.DOCTOR_NAME} on ${targetAppt.date} at ${targetAppt.time} has been confirmed.`;
-        } else if (status === 'cancelled') {
-          smsMessageText = `Dear ${targetAppt.name}, your appointment with ${ENV.DOCTOR_NAME} on ${targetAppt.date} at ${targetAppt.time} has been cancelled. Please contact us at ${ENV.ADMIN_PHONE} for rescheduling.`;
-        }
-
-        if (smsMessageText && targetAppt.phone) {
-          transmitTwilioSms(targetAppt.phone, smsMessageText);
-        }
+        // Dispatches conditional SMS updates based on configuration criteria
+        const customMessageText = status === 'confirmed' 
+          ? `Great news ${targetAppt.name}! Your appointment for ${targetAppt.service} on ${targetAppt.date} at ${targetAppt.time} has been officially confirmed.`
+          : `Hello ${targetAppt.name}. Unfortunately, your appointment request for ${targetAppt.date} has been cancelled. Please contact us to reschedule.`;
+        
+        sendPatientSMS(targetAppt, customMessageText);
       }
     }
 
